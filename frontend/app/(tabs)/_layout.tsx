@@ -9,6 +9,7 @@ import { colors, spacing, fonts } from '@/src/theme';
 
 const TABS = [
   { name: 'monde', label: 'MONDE', icon: 'ship-wheel' as const },
+  { name: 'histoire', label: 'HISTOIRE', icon: 'book-open-page-variant' as const },
   { name: 'classes', label: 'CLASSES', icon: 'sword-cross' as const },
   { name: 'quetes', label: 'QUÊTES', icon: 'script-text-outline' as const },
   { name: 'journal', label: 'JOURNAL', icon: 'notebook-outline' as const },
@@ -58,6 +59,7 @@ export default function TabsLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tabs.Screen name="monde" />
+      <Tabs.Screen name="histoire" />
       <Tabs.Screen name="classes" />
       <Tabs.Screen name="quetes" />
       <Tabs.Screen name="journal" />
@@ -84,8 +86,8 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontFamily: fonts.text,
-    fontSize: 10,
-    letterSpacing: 1.5,
+    fontSize: 9,
+    letterSpacing: 1,
     color: colors.onSurfaceSecondary,
     fontWeight: '600',
   },
