@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator,
-  Modal, Dimensions, Linking, Platform,
+  Modal, Linking, Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,9 +13,6 @@ import * as Sharing from 'expo-sharing';
 import { colors, spacing, radius, type, fonts } from '@/src/theme';
 import { fetchPassport } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
-
-const { width } = Dimensions.get('window');
-const CARD_W = (width - spacing.lg * 2 - spacing.md) / 2;
 
 export default function PasseportScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -43,7 +40,7 @@ export default function PasseportScreen() {
         showToast('Ouverture du modèle…');
         return;
       }
-      const filename = `${item.name.replace(/\s+/g, '_')}.jpg`;
+      const filename = `${item.name.replace(/\s+/g, '_')}.png`;
       const dest = (FileSystem as any).documentDirectory + filename;
       const dl = await FileSystem.downloadAsync(item.download_url, dest);
       if (await Sharing.isAvailableAsync()) {
@@ -65,7 +62,7 @@ export default function PasseportScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
           {items.map((p) => (
-            <View key={p.id} style={[styles.card, { width: CARD_W }]} testID={`passport-card-${p.order}`}>
+            <View key={p.id} style={styles.card} testID={`passport-card-${p.order}`}>
               <Pressable onPress={() => { Haptics.selectionAsync().catch(() => {}); setPreview(p); }} style={styles.thumbWrap}>
                 <Image source={{ uri: p.thumbnail_url }} style={styles.thumb} contentFit="cover" transition={200} />
                 <View style={styles.pageBadge}>
@@ -124,10 +121,12 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   grid: {
     flexDirection: 'row', flexWrap: 'wrap',
-    padding: spacing.lg, gap: spacing.md,
+    padding: spacing.lg, rowGap: spacing.md, columnGap: spacing.md,
     paddingBottom: spacing.xxxl,
   },
   card: {
+    flexBasis: '47%',
+    flexGrow: 0,
     backgroundColor: colors.surfaceSecondary,
     borderRadius: radius.md,
     borderWidth: 1, borderColor: colors.borderStrong,

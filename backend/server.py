@@ -160,19 +160,21 @@ DEFAULT_JOURNAL = [
 ]
 
 DEFAULT_PASSPORT = [
-    {"order": 1, "name": "Page de Garde", "description": "Ex-libris et sceau de la Confrérie."},
-    {"order": 2, "name": "Identité de l'Héritier", "description": "Nom, classe, port d'attache."},
-    {"order": 3, "name": "Fiche de Classe", "description": "Compétences, équipement, serment."},
+    {"order": 1, "name": "Couverture", "description": "Couverture officielle du passeport de la Confrérie."},
+    {"order": 2, "name": "Message des Anciens Gardiens", "description": "Parole transmise par les Anciens Gardiens à chaque Héritier."},
+    {"order": 3, "name": "Serment", "description": "Serment prêté par tout membre de la Confrérie."},
     {"order": 4, "name": "Journal de Bord", "description": "Pages lignées pour vos entrées."},
     {"order": 5, "name": "Carte des Mers", "description": "Carte vierge à annoter."},
     {"order": 6, "name": "Registre des Reliques", "description": "Suivi des 10 reliques."},
     {"order": 7, "name": "Sceau de Guilde", "description": "Emplacement pour votre marque personnelle."},
 ]
 
-PASSPORT_THUMBS = [
-    "https://images.unsplash.com/photo-1719563015025-83946fb49e49",
-    "https://images.pexels.com/photos/6039116/pexels-photo-6039116.jpeg",
-    "https://images.unsplash.com/photo-1519972064555-542444e71b54",
+PASSPORT_ASSETS = [
+    # Real user-provided pages
+    "https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/x13rdvs8_Passeport-couverture",
+    "https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/cmn1ucae_Passeport-message%20des%20anciens%20gardiens",
+    "https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/dh0fwxak_Passeport-serment",
+    # Placeholders for remaining pages (to be replaced by the user)
     "https://images.pexels.com/photos/6039245/pexels-photo-6039245.jpeg",
     "https://images.pexels.com/photos/14436275/pexels-photo-14436275.jpeg",
     "https://images.pexels.com/photos/6485474/pexels-photo-6485474.jpeg",
@@ -228,10 +230,33 @@ async def seed_db():
                 "order": p["order"],
                 "name": p["name"],
                 "description": p["description"],
-                "thumbnail_url": PASSPORT_THUMBS[i % len(PASSPORT_THUMBS)],
-                "download_url": PASSPORT_THUMBS[i % len(PASSPORT_THUMBS)],
+                "thumbnail_url": PASSPORT_ASSETS[i % len(PASSPORT_ASSETS)],
+                "download_url": PASSPORT_ASSETS[i % len(PASSPORT_ASSETS)],
             })
         await db.passport.insert_many(docs)
+    else:
+        # Re-seed passport if names or URLs are outdated
+        cur = await db.passport.find({}, {"_id": 0}).sort("order", 1).to_list(20)
+        needs = len(cur) != len(DEFAULT_PASSPORT)
+        if not needs:
+            for i, existing in enumerate(cur):
+                if (existing.get("name") != DEFAULT_PASSPORT[i]["name"]
+                    or existing.get("thumbnail_url") != PASSPORT_ASSETS[i % len(PASSPORT_ASSETS)]):
+                    needs = True
+                    break
+        if needs:
+            await db.passport.delete_many({})
+            docs = []
+            for i, p in enumerate(DEFAULT_PASSPORT):
+                docs.append({
+                    "id": str(uuid.uuid4()),
+                    "order": p["order"],
+                    "name": p["name"],
+                    "description": p["description"],
+                    "thumbnail_url": PASSPORT_ASSETS[i % len(PASSPORT_ASSETS)],
+                    "download_url": PASSPORT_ASSETS[i % len(PASSPORT_ASSETS)],
+                })
+            await db.passport.insert_many(docs)
 
 
 @app.on_event("startup")
