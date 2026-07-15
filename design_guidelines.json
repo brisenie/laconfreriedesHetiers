@@ -1,0 +1,179 @@
+{
+  "app_name": "La Confrérie des Héritiers",
+  "personality": "6 Glass / Luxe DARK fused with 8 Hand-Drawn (for parchment/wood textures)",
+  "personality_one_liner": "A dark, textured, pirate-steampunk adventure wrapped in deep wood, antique brass, and aged parchment.",
+  "color": {
+    "surface": "#161311",
+    "onSurface": "#F0E6D2",
+    "surfaceSecondary": "#2C221C",
+    "onSurfaceSecondary": "#E8D5B7",
+    "surfaceTertiary": "#4A3B32",
+    "onSurfaceTertiary": "#F0E6D2",
+    "surfaceInverse": "#E3CBA8",
+    "onSurfaceInverse": "#2A1E17",
+    "brand": "#C69C4A",
+    "brandPrimary": "#C69C4A",
+    "onBrandPrimary": "#1A120E",
+    "brandSecondary": "#A37D35",
+    "onBrandSecondary": "#1A120E",
+    "brandTertiary": "#805A21",
+    "onBrandTertiary": "#F0E6D2",
+    "success": "#4C6B4C",
+    "onSuccess": "#D5E5D5",
+    "warning": "#B8860B",
+    "onWarning": "#2A1E17",
+    "error": "#7A3B3B",
+    "onError": "#F0D8D8",
+    "info": "#4A6B7A",
+    "onInfo": "#D5E5F0",
+    "border": "#3D2E25",
+    "borderStrong": "#A37D35",
+    "divider": "#3D2E25"
+  },
+  "typography": {
+    "displayFontFamily": "Cormorant Garamond",
+    "textFontFamily": "DM Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous spacing to allow textures to breathe, structured margins to frame content like pages in an old book.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 4,
+    "md": 8,
+    "lg": 12,
+    "pill": 999
+  },
+  "shadow_tier": "2",
+  "navigation": "bottom_tabs",
+  "icon_set": "MaterialCommunityIcons",
+  "glassmorphism": {
+    "enabled": "true",
+    "do's": [
+      "Use subtle glass over dark wood backgrounds to separate header and tab bars.",
+      "Use heavy tint (≥75% surface/surfaceSecondary opacity) behind glass to maintain text readability."
+    ],
+    "dont's": [
+      "No high-blur glass on parchment cards (it breaks the organic material feel).",
+      "Avoid bright/white frost. Glass must be tinted with deep wood (#161311) or brass."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Home",
+      "purpose": "Immersive landing with the main title and CTA to begin the adventure.",
+      "states": {
+        "loading": "Centered brass-colored spinner on wood background.",
+        "empty": "N/A",
+        "error": "Parchment card with dark ink error message and brass retry button."
+      },
+      "layout": "Full-bleed background image of a compass/map (home_hero). A dark vertical gradient scrim fades from top (transparent) to bottom (90% surface opacity). Large display text 'LA CONFRÉRIE DES HÉRITIERS' sits at the top 1/3 (simulating a scroll banner). Narrative text in the middle. Sticky 'COMMENCER L\\'AVENTURE' CTA button pinned to the bottom. Button has a brass border (borderStrong) and surfaceTertiary/brandPrimary tint."
+    },
+    {
+      "name": "Monde",
+      "purpose": "Provide world lore and universe description.",
+      "states": {
+        "loading": "Spinner on wood background.",
+        "empty": "No lore unlocked yet.",
+        "error": "Error loading world data."
+      },
+      "layout": "Dark wood background. Single-column scrollable layout containing a large 'Parchment' card (surfaceInverse background). Text inside uses onSurfaceInverse (dark ink) for high contrast and readability. A decorative brass-colored header divider."
+    },
+    {
+      "name": "Classes",
+      "purpose": "Grid catalog of 10 character classes.",
+      "states": {
+        "loading": "Skeleton grid of cards.",
+        "empty": "No classes available.",
+        "error": "Failed to load classes."
+      },
+      "layout": "2-column grid of cards using space-between. Each card uses surfaceSecondary with a borderStrong (brass) outline. Displays character thumbnail, class name in displayFontFamily. Tapping opens a full-screen image modal or detailed card."
+    },
+    {
+      "name": "Quêtes",
+      "purpose": "List of password-protected quests.",
+      "states": {
+        "loading": "Spinner.",
+        "empty": "Password input overlay covering the screen. Once unlocked: empty quest list.",
+        "error": "Incorrect password shake animation."
+      },
+      "layout": "Initial state: Centered password input on wood background with a lock icon, 'ENTRER LE CODE' button. Unlocked state: Scrollable list of quest cards. Each row has a leading wax-seal or skull icon, quest title, and a chevron."
+    },
+    {
+      "name": "Journal",
+      "purpose": "Chronological log of dated entries.",
+      "states": {
+        "loading": "Skeleton lines.",
+        "empty": "An empty parchment graphic with 'Aucune entrée.'",
+        "error": "Error fetching journal."
+      },
+      "layout": "Vertical timeline. Entries are styled as torn parchment blocks (surfaceInverse base, onSurfaceInverse text) layered over the dark wood background. Dates are highlighted in bold serif."
+    },
+    {
+      "name": "Passeport",
+      "purpose": "Gallery of downloadable passport templates.",
+      "states": {
+        "loading": "Loading thumbnails.",
+        "empty": "No passport templates.",
+        "error": "Error loading gallery."
+      },
+      "layout": "2-column grid of passport page thumbnails. Each thumbnail card has a small download icon button (brandPrimary color) in the corner. Heavy shadows to make them look like physical paper stacked on wood."
+    }
+  ],
+  "images": {
+    "home_hero": {
+      "url": "https://images.pexels.com/photos/14436275/pexels-photo-14436275.jpeg",
+      "alt": "Antique compass on a vintage world map"
+    },
+    "wood_texture": {
+      "url": "https://images.pexels.com/photos/6485474/pexels-photo-6485474.jpeg",
+      "alt": "Dark weathered wood texture"
+    },
+    "parchment_texture": {
+      "url": "https://images.unsplash.com/photo-1719563015025-83946fb49e49",
+      "alt": "Aged parchment paper"
+    },
+    "class_placeholder_1": {
+      "url": "https://images.pexels.com/photos/18305605/pexels-photo-18305605.jpeg",
+      "alt": "Dark fantasy character portrait"
+    },
+    "class_placeholder_2": {
+      "url": "https://images.pexels.com/photos/10494327/pexels-photo-10494327.jpeg",
+      "alt": "Elf fantasy character portrait"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color palette to achieve the Pirate/Steampunk aesthetic. Use surfaceInverse (#E3CBA8) and onSurfaceInverse (#2A1E17) heavily for cards to simulate text written on parchment.",
+    "Use borderStrong (#A37D35) for framing buttons and cards to mimic brass trimmings on dark wood.",
+    "The Bottom Tab Bar must use a dark wood-like background tint (surface) with brandPrimary (brass/gold) active icons and onSurfaceSecondary for inactive icons. Avoid standard white/grey tab bars.",
+    "For the Home screen, ensure the background map image has a strong dark gradient scrim (vertical, transparent to #161311) so the narrative text and the primary CTA button pop out perfectly.",
+    "For the 'QUÊTES' screen, implement a full-screen password overlay before showing the list of quests. Use a simple text input and a submit button.",
+    "For the 'CLASSES' screen, ensure cards in the 2-col grid fill the width equally (flexWrap: 'wrap', justifyContent: 'space-between'). Do not leave orphans stretching.",
+    "Make sure haptics are wired up for tab changes, button presses, and the quest unlock action."
+  ]
+}
