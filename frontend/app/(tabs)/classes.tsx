@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Modal,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
+
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,7 +17,6 @@ import * as Haptics from 'expo-haptics';
 import { colors, spacing, radius, type, fonts } from '@/src/theme';
 import { fetchClasses } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
-
 export default function ClassesScreen() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
