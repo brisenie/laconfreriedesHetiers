@@ -7,12 +7,15 @@ import {
   Pressable,
   ActivityIndicator,
   Modal,
+  Alert,
 } from 'react-native';
 
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 import { colors, spacing, radius, type, fonts } from '@/src/theme';
 import { fetchClasses } from '@/src/api';
@@ -122,6 +125,16 @@ const localClasses = [
   },
 ];
 
+const buildClassDownloadContent = (classe: any) => {
+  return [
+    `Classe : ${classe.name}`,
+    `Sous-titre : ${classe.subtitle}`,
+    `Description : ${classe.description}`,
+    '',
+    'Confrérie des Héritiers',
+  ].join('\n');
+};
+
 export default function ClassesScreen() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,6 +164,34 @@ export default function ClassesScreen() {
   const open = (classe: any) => {
     Haptics.selectionAsync().catch(() => {});
     setSelected(classe);
+  };
+
+  const handleDownload = async (classe: any) => {
+    Haptics.selectionAsync().catch(() => {});
+
+    try {
+      const safeName = (classe.name || 'classe')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-');
+      const fileUri = `${FileSystem.Paths.cache.uri}${safeName || 'classe'}.txt`;
+
+      await FileSystem.writeAsStringAsync(fileUri, buildClassDownloadContent(classe), {
+        encoding: 'utf8',
+      });
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'text/plain',
+        dialogTitle: `Télécharger ${classe.name}`,
+      });
+    } catch (error) {
+      console.error('Erreur pendant le téléchargement de la classe :', error);
+      Alert.alert(
+        'Téléchargement impossible',
+        'Le fichier n’a pas pu être préparé.'
+      );
+    }
   };
 
   return (
@@ -204,6 +245,38 @@ export default function ClassesScreen() {
                 <Text style={styles.cardSub} numberOfLines={1}>
                   {classe.subtitle}
                 </Text>
+
+                <View style={styles.cardActions}>
+                  <Pressable
+                    style={[styles.actionBtn, styles.previewBtn]}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      open(classe);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="eye-outline"
+                      size={14}
+                      color={colors.brandPrimary}
+                    />
+                    <Text style={styles.actionText}>Aperçu</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.actionBtn, styles.downloadBtn]}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      handleDownload(classe);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="download-outline"
+                      size={14}
+                      color={colors.onSurface}
+                    />
+                    <Text style={styles.actionText}>Télécharger</Text>
+                  </Pressable>
+                </View>
               </View>
             </Pressable>
           ))}
@@ -324,6 +397,40 @@ const styles = StyleSheet.create({
     ...type.small,
     fontStyle: 'italic',
     marginTop: 2,
+  },
+
+  cardActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+
+  previewBtn: {
+    backgroundColor: colors.surface,
+    borderColor: colors.brandPrimary,
+  },
+
+  downloadBtn: {
+    backgroundColor: colors.brandPrimary,
+    borderColor: colors.brandPrimary,
+  },
+
+  actionText: {
+    fontFamily: fonts.text,
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.onSurface,
   },
 
   modalRoot: {
