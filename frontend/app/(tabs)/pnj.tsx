@@ -325,6 +325,6 @@ const styles = StyleSheet.create({
   message: {
     color: '#f4dfb1',
     textAlign: 'center',
-    marginTop: 12,
+     marginTop: 12,
   },
 });
