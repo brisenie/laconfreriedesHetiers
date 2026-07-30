@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,10 +19,21 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   'Épique': '#9B4B8B',
 };
 
+const AVAILABLE_CODES = [
+  'Fraser',
+  'Réveil de Radix',
+  'Première relique',
+  'Code des gardiens',
+  'Mur des anciens',
+  'Nom des gardiens',
+  'Forge des anciens',
+];
+
 export default function QuetesScreen() {
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [quests, setQuests] = useState<any[]>([]);
+  const [unlockedOrders, setUnlockedOrders] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const shake = useSharedValue(0);
@@ -39,6 +50,7 @@ export default function QuetesScreen() {
       const data = await verifyQuests(password);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setQuests(data.quests || []);
+      setUnlockedOrders(data.unlockedOrders || []);
       setUnlocked(true);
     } catch (e: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
@@ -70,6 +82,13 @@ export default function QuetesScreen() {
             <Text style={styles.lockHint}>
               Seuls les Héritiers connaissant le mot de passe de la Confrérie peuvent accéder aux quêtes.
             </Text>
+
+            <View style={styles.codeList}>
+              <Text style={styles.codeListTitle}>Codes disponibles</Text>
+              {AVAILABLE_CODES.map((code) => (
+                <Text key={code} style={styles.codeItem}>• {code}</Text>
+              ))}
+            </View>
 
             <Animated.View style={[styles.inputWrap, shakeAnim]}>
               <MaterialCommunityIcons name="key-variant" size={20} color={colors.brandPrimary} />
@@ -104,30 +123,61 @@ export default function QuetesScreen() {
     );
   }
 
+  const handleQuestPress = (quest: any, isUnlocked: boolean) => {
+    if (!isUnlocked) {
+      Alert.alert('Quête verrouillée', 'Cette quête n’est pas encore accessible.');
+      return;
+    }
+
+    Alert.alert(quest.title, `${quest.location}\n\n${quest.description}`);
+  };
+
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="quetes-screen">
       <ScreenHeader title="LES QUÊTES" subtitle={`${quests.length} contrats ouverts`} icon="script-text-outline" />
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {quests.map((q) => (
-          <View key={q.id} style={styles.questCard} testID={`quest-card-${q.order}`}>
-            <View style={styles.questHead}>
-              <View style={[styles.diffPill, { backgroundColor: DIFFICULTY_COLORS[q.difficulty] || colors.brandTertiary }]}>
-                <Text style={styles.diffText}>{q.difficulty.toUpperCase()}</Text>
+        {quests.map((q) => {
+          const isUnlocked = unlockedOrders.includes(q.order);
+          return (
+            <Pressable
+              key={q.id}
+              onPress={() => handleQuestPress(q, isUnlocked)}
+              style={({ pressed }) => [
+                styles.questCard,
+                isUnlocked ? styles.questCardUnlocked : styles.questCardLocked,
+                pressed && { opacity: 0.9 },
+              ]}
+              testID={`quest-card-${q.order}`}
+            >
+              <View style={styles.questHead}>
+                <View style={[styles.diffPill, { backgroundColor: DIFFICULTY_COLORS[q.difficulty] || colors.brandTertiary }]}>
+                  <Text style={styles.diffText}>{q.difficulty.toUpperCase()}</Text>
+                </View>
+                <Text style={styles.questNum}>#{String(q.order).padStart(2, '0')}</Text>
               </View>
-              <Text style={styles.questNum}>#{String(q.order).padStart(2, '0')}</Text>
-            </View>
-            <Text style={styles.questTitle}>{q.title}</Text>
-            <View style={styles.locRow}>
-              <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.brandPrimary} />
-              <Text style={styles.locText}>{q.location}</Text>
-            </View>
-            <Text style={styles.questDesc}>{q.description}</Text>
-            <View style={styles.rewardRow}>
-              <MaterialCommunityIcons name="treasure-chest" size={16} color={colors.brandPrimary} />
-              <Text style={styles.rewardText}>{q.reward}</Text>
-            </View>
-          </View>
-        ))}
+
+              {isUnlocked ? (
+                <>
+                  <Text style={styles.questTitle}>{q.title}</Text>
+                  <View style={styles.locRow}>
+                    <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.brandPrimary} />
+                    <Text style={styles.locText}>{q.location}</Text>
+                  </View>
+                  <Text style={styles.questDesc}>{q.description}</Text>
+                  <View style={styles.rewardRow}>
+                    <MaterialCommunityIcons name="treasure-chest" size={16} color={colors.brandPrimary} />
+                    <Text style={styles.rewardText}>{q.reward}</Text>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.lockedContent}>
+                  <MaterialCommunityIcons name="lock-outline" size={24} color={colors.onSurfaceSecondary} />
+                  <Text style={styles.lockedText}>Quête verrouillée</Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -153,7 +203,29 @@ const styles = StyleSheet.create({
   },
   lockHint: {
     ...type.body, textAlign: 'center', color: colors.onSurfaceSecondary,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  codeList: {
+    width: '100%', maxWidth: 340,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1, borderColor: colors.borderStrong,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  codeListTitle: {
+    fontFamily: fonts.text,
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.brandPrimary,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  codeItem: {
+    ...type.small,
+    color: colors.onSurfaceSecondary,
+    marginTop: 2,
   },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
@@ -179,11 +251,18 @@ const styles = StyleSheet.create({
 
   list: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
   questCard: {
-    backgroundColor: colors.surfaceSecondary,
     borderRadius: radius.md,
-    borderWidth: 1, borderColor: colors.borderStrong,
+    borderWidth: 1,
     padding: spacing.lg,
     gap: spacing.sm,
+  },
+  questCardUnlocked: {
+    backgroundColor: colors.surfaceSecondary,
+    borderColor: colors.borderStrong,
+  },
+  questCardLocked: {
+    backgroundColor: '#3D342E',
+    borderColor: colors.border,
   },
   questHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   diffPill: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.sm },
@@ -199,4 +278,15 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: colors.divider,
   },
   rewardText: { ...type.small, color: colors.brandPrimary, fontWeight: '600' },
+  lockedContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.xs,
+  },
+  lockedText: {
+    ...type.small,
+    color: colors.onSurfaceSecondary,
+    fontStyle: 'italic',
+  },
 });

@@ -17,8 +17,23 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-QUESTS_PASSWORD = os.environ.get('QUESTS_PASSWORD', 'kraken2026')
+QUESTS_PASSWORD = os.environ.get('QUESTS_PASSWORD', 'Fraser')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'amiral2026')
+
+QUEST_UNLOCKS = {
+    'fraser': [1, 2, 3, 4, 5, 6],
+    'infectes': [1],
+    'reveil de radix': [1, 2],
+    'premiere relique': [1, 2, 3],
+    'code des gardiens': [1, 2, 3, 4],
+    'mur des anciens': [1, 2, 3, 4, 5],
+    'nom des gardiens': [1, 2, 3, 4, 5],
+    'forge des anciens': [1, 2, 3, 4, 5, 6],
+}
+
+
+def normalize_password(value: str) -> str:
+    return (value or '').strip().lower().replace('é', 'e').replace('è', 'e').replace('ê', 'e')
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -151,6 +166,7 @@ DEFAULT_QUESTS = [
     {"order": 3, "title": "Le Coffre du Contrebandier", "difficulty": "Moyen", "location": "Île aux Deux Lunes", "description": "Ouvrir le coffre scellé par sept serrures. Six clés déjà trouvées. La septième est... quelque part.", "reward": "Épée du Contrebandier"},
     {"order": 4, "title": "La Marée des Infectés", "difficulty": "Difficile", "location": "Baie de l'Obsidienne", "description": "Repousser la première vague d'Infectés avant qu'elle n'atteigne les faubourgs.", "reward": "Titre : Défenseur de la Baie"},
     {"order": 5, "title": "L'Écho des Anciens", "difficulty": "Épique", "location": "Temple Englouti", "description": "Descendre dans le Temple Englouti et rapporter la première Relique majeure.", "reward": "Relique de l'Étoile Brisée"},
+    {"order": 6, "title": "La Forge des Anciens", "difficulty": "Moyen", "location": "Forêt des Anciens", "description": "# ⚒️ Quête GN : La Forge des Anciens\n\n## Durée\n45 à 90 minutes\n\n## Difficulté\n⭐⭐☆☆☆\n\n## Récompense\nChaque aventurier repart avec sa première arme officielle.\n\n# 📜 Histoire\nAu cœur de la forêt se cache une vieille forge oubliée.\n\nOn raconte qu'elle appartenait à Maître Aldren Forgefer, le dernier forgeron des Gardiens.\n\nLorsque les Reliques furent dispersées, il cacha tous ses outils afin qu'ils ne tombent jamais entre les mains des Pirates Noirs.\n\nAvant de mourir, il grava ces mots :\n\n« Une arme n'est pas forgée pour faire la guerre. Elle est forgée pour protéger ceux qui nous sont chers. »\n\nAujourd'hui, la forge s'éveille de nouveau.\n\nMais elle ne reconnaît que les véritables Héritiers.\n\n# ⚒️ Étape 1 : Réveiller la Forge\nLes aventuriers découvrent :\n\n- une enclume\n- un marteau\n- des pinces\n- des moules\n- un vieux soufflet\n- des plans d'armes\n\nMais rien ne fonctionne.\n\nIls doivent retrouver 4 Cristaux de Forge cachés autour du camp.\n\nChaque cristal représente une qualité :\n\n❤️ Courage\n\n🤝 Honneur\n\n🧠 Sagesse\n\n🛡️ Protection\n\n# ⚒️ Étape 2 : Les Épreuves du Forgeron\nChaque cristal demande une épreuve.\n\n### ❤️ Courage\nMarcher sur un parcours d'équilibre.\n\n### 🤝 Honneur\nTransporter une lame sans la faire tomber en travaillant ensemble.\n\n### 🧠 Sagesse\nRésoudre une énigme du forgeron.\n\n### 🛡️ Protection\nConstruire un petit bouclier avec des matériaux naturels.\n\n# ⚒️ Étape 3 : Le Choix de l'Arme\nLorsque la forge est réveillée :\n\nChaque joueur choisit son plan.\n\nPar exemple :\n\n- Sabre\n- Coutelas\n- Hachette\n- Dague\n- Marteau\n- Lance\n- Trident\n- Gourdin\n- Bouclier\n\nLe forgeron remet alors les matériaux.\n\n# ⚒️ Étape 4 : La Fabrication\nLes joueurs fabriquent leur arme.\n\nIls peuvent :\n\n✂️ découper\n\n🧴 coller\n\n🎨 peindre\n\n🪢 ajouter une poignée\n\n⚓ ajouter leur symbole personnel\n\n# ⚔️ Étape 5 : Le Rite de la Forge\nLorsque toutes les armes sont terminées :\n\nLes joueurs forment un cercle.\n\nLe forgeron dit :\n\n« Une arme n'a de valeur que par la main qui la porte. Promettez-vous de protéger les faibles ? De défendre votre équipage ? De respecter vos compagnons ? »\n\nTous répondent :\n\n« Nous le jurons ! »\n\nLe forgeron frappe trois coups sur l'enclume.\n\nLes armes deviennent officiellement celles des Héritiers.\n\n# 🎁 Récompenses\nChaque joueur reçoit :\n\n⚔️ Son arme officielle.\n\n📜 Certificat d'Apprenti Forgeron.\n\n🪙 Insigne de la Forge.", "reward": "Première arme officielle + Certificat d'Apprenti Forgeron"},
 ]
 
 DEFAULT_JOURNAL = [
@@ -210,7 +226,15 @@ async def seed_db():
             })
         await db.classes.insert_many(docs)
 
-    if await db.quests.count_documents({}) == 0:
+    cur = await db.quests.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    needs_reseed = len(cur) != len(DEFAULT_QUESTS)
+    if not needs_reseed:
+        for existing, wanted in zip(cur, DEFAULT_QUESTS):
+            if existing.get("title") != wanted["title"] or existing.get("description") != wanted["description"]:
+                needs_reseed = True
+                break
+    if needs_reseed:
+        await db.quests.delete_many({})
         docs = [{"id": str(uuid.uuid4()), **q} for q in DEFAULT_QUESTS]
         await db.quests.insert_many(docs)
 
@@ -286,10 +310,19 @@ async def get_classes():
 
 @api_router.post("/quests/verify")
 async def verify_quests(payload: QuestPasswordRequest):
-    if payload.password != QUESTS_PASSWORD:
-        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
+    normalized_input = normalize_password(payload.password)
+    normalized_master = normalize_password(QUESTS_PASSWORD)
+
     docs = await db.quests.find({}, {"_id": 0}).sort("order", 1).to_list(100)
-    return {"quests": docs}
+
+    if normalized_input == normalized_master:
+        return {"quests": docs, "unlockedOrders": [quest.get('order') for quest in docs]}
+
+    unlocked_orders = QUEST_UNLOCKS.get(normalized_input)
+    if not unlocked_orders:
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
+
+    return {"quests": docs, "unlockedOrders": unlocked_orders}
 
 
 @api_router.get("/journal")
