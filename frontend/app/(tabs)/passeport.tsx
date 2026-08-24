@@ -256,7 +256,7 @@ export default function PasseportScreen() {
                   <MaterialCommunityIcons
                     name={
                       impression
-                        ? 'printer-clock'
+                        ? 'printer-check'
                         : 'printer'
                     }
                     size={14}

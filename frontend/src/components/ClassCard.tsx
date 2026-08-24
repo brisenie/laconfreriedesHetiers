@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View, Image } from "react-native";
-import { Classe } from "../data/classes";
+import { Classe } from "../data/classes.ts/classes";
 
 type Props = {
   classe: Classe;

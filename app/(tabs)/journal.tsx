@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -8,6 +9,9 @@ import { fetchJournal } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
 const MONTHS = ['JANV', 'FÉVR', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
+const LAST_JOURNAL_IMAGE = require('../../frontend/assets/images/journal/journal des infectés.jpg');
+const SECOND_JOURNAL_IMAGE = require('../../frontend/assets/images/journal/le message des anciens.png');
+const FIRST_JOURNAL_IMAGE = require('../../frontend/assets/images/journal/chasse 2026.png');
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -43,8 +47,11 @@ export default function JournalScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          {entries.map((e) => {
+          {entries.map((e, index) => {
             const d = formatDate(e.date);
+            const isFirstEntry = index === 0;
+            const isSecondEntry = index === 1;
+            const isLastEntry = index === entries.length - 1;
             return (
               <View key={e.id} style={styles.entry} testID={`journal-entry-${e.id}`}>
                 <View style={styles.dateCol}>
@@ -53,9 +60,19 @@ export default function JournalScreen() {
                   <Text style={styles.dateYear}>{d.year}</Text>
                 </View>
                 <View style={styles.parchment}>
-                  <Text style={styles.entryTitle}>{e.title}</Text>
-                  <View style={styles.rule} />
-                  <Text style={styles.entryBody}>{e.body}</Text>
+                  {isFirstEntry ? (
+                    <Image source={FIRST_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
+                  ) : isSecondEntry ? (
+                    <Image source={SECOND_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
+                  ) : isLastEntry ? (
+                    <Image source={LAST_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
+                  ) : (
+                    <>
+                      <Text style={styles.entryTitle}>{e.title}</Text>
+                      <View style={styles.rule} />
+                      <Text style={styles.entryBody}>{e.body}</Text>
+                    </>
+                  )}
                 </View>
               </View>
             );
@@ -90,6 +107,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.brandSecondary,
     padding: spacing.md,
   },
+  lastEntryImage: { width: '100%', aspectRatio: 2 / 3, borderRadius: radius.sm },
   entryTitle: {
     fontFamily: fonts.display, fontSize: 18, fontWeight: '700',
     color: colors.onSurfaceInverse,

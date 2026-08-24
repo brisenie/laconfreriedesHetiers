@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -8,6 +9,9 @@ import { fetchJournal } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
 const MONTHS = ['JANV', 'FÉVR', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
+const LAST_JOURNAL_IMAGE = require('../../assets/images/journal/journal des infectés.jpg');
+const SECOND_JOURNAL_IMAGE = require('../../assets/images/journal/le message des anciens.png');
+const FIRST_JOURNAL_IMAGE = require('../../assets/images/journal/chasse 2026.png');
 
 const DEFAULT_JOURNAL_ENTRIES = [
   {
@@ -102,10 +106,20 @@ export default function JournalScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          {entries.map((e) => {
+          {entries.map((e, index) => {
+            const isFirstEntry = index === 0;
+            const isSecondEntry = index === 1;
+            const isLastEntry = index === entries.length - 1;
             return (
               <View key={e.id} style={styles.entry} testID={`journal-entry-${e.id}`}>
                 <View style={styles.parchment}>
+                  {isFirstEntry ? (
+                    <Image source={FIRST_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
+                  ) : isSecondEntry ? (
+                    <Image source={SECOND_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
+                  ) : isLastEntry ? (
+                    <Image source={LAST_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
+                  ) : <>
                   <Text style={styles.entryTitle}>{e.title}</Text>
                   <View style={styles.rule} />
                   <View style={styles.bodyBlock}>
@@ -130,6 +144,7 @@ export default function JournalScreen() {
                       );
                     })}
                   </View>
+                  </>}
                 </View>
               </View>
             );
@@ -159,6 +174,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  lastEntryImage: { width: '100%', aspectRatio: 2 / 3, borderRadius: radius.sm },
   entryTitle: {
     fontFamily: fonts.display,
     fontSize: 18,

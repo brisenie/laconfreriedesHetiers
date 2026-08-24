@@ -8,7 +8,7 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import { Classe } from "../data/classes";
+import { Classe } from "../data/classes.ts/classes";
 
 type Props = {
   visible: boolean;
