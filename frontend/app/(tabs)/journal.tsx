@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -77,6 +77,12 @@ function formatDate(iso: string) {
 export default function JournalScreen() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pageIndex, setPageIndex] = useState(0);
+  const pagerRef = useRef<ScrollView>(null);
+  const { width, height } = useWindowDimensions();
+  const bookWidth = Math.max(width - spacing.xl * 2, 280);
+  const pageHeight = Math.min(Math.max(height * 0.58, 420), 620);
+  const spreadCount = entries.length > 1 ? 2 : entries.length;
 
   useEffect(() => {
     fetchJournal()
@@ -105,59 +111,140 @@ export default function JournalScreen() {
           <Text style={styles.emptyText}>Aucune entrée pour l'instant.</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          {entries.map((e, index) => {
-            const isFirstEntry = index === 0;
-            const isSecondEntry = index === 1;
-            const isLastEntry = index === entries.length - 1;
-            return (
-              <View key={e.id} style={styles.entry} testID={`journal-entry-${e.id}`}>
-                <View style={styles.parchment}>
-                  {isFirstEntry ? (
-                    <Image source={FIRST_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
-                  ) : isSecondEntry ? (
-                    <Image source={SECOND_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
-                  ) : isLastEntry ? (
-                    <Image source={LAST_JOURNAL_IMAGE} style={styles.lastEntryImage} contentFit="contain" />
-                  ) : <>
-                  <Text style={styles.entryTitle}>{e.title}</Text>
-                  <View style={styles.rule} />
-                  <View style={styles.bodyBlock}>
-                    {String(e.body || '').split('\n').map((line, index) => {
-                      const trimmed = line.trim();
-                      if (!trimmed) {
-                        return <View key={`${e.id}-${index}`} style={styles.bodySpacer} />;
-                      }
+        <View style={styles.bookArea}>
+          <ScrollView
+            ref={pagerRef}
+            style={[styles.bookPager, { width: bookWidth }]}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.bookPages}
+            onMomentumScrollEnd={(event) => {
+              setPageIndex(Math.round(event.nativeEvent.contentOffset.x / bookWidth));
+            }}
+          >
+            {entries.map((entry, index) => {
+              if (index === 0) {
+                return <BookSpread key={`${entry.id}-spread`} width={bookWidth} height={pageHeight} image={FIRST_JOURNAL_IMAGE} testID={`journal-entry-${entry.id}`} />;
+              }
 
-                      if (trimmed.startsWith('### ')) {
-                        return (
-                          <Text key={`${e.id}-${index}`} style={styles.bodyHeading}>
-                            {trimmed.replace(/^###\s*/, '')}
-                          </Text>
-                        );
-                      }
+              if (index === 1) {
+                return <BookImagesSpread key={`${entry.id}-spread`} width={bookWidth} height={pageHeight} testID="journal-images-spread" />;
+              }
 
-                      return (
-                        <Text key={`${e.id}-${index}`} style={styles.entryBody}>
-                          {trimmed}
-                        </Text>
-                      );
-                    })}
-                  </View>
-                  </>}
-                </View>
-              </View>
-            );
-          })}
-        </ScrollView>
+              return null;
+            })}
+          </ScrollView>
+
+          <View style={styles.bookControls}>
+            <Pressable
+              accessibilityLabel="Page précédente"
+              disabled={pageIndex === 0}
+              onPress={() => {
+                const nextIndex = Math.max(pageIndex - 1, 0);
+                pagerRef.current?.scrollTo({ x: nextIndex * bookWidth, animated: true });
+                setPageIndex(nextIndex);
+              }}
+              style={({ pressed }) => [styles.pageButton, pageIndex === 0 && styles.pageButtonDisabled, pressed && styles.pageButtonPressed]}
+            >
+              <MaterialCommunityIcons name="chevron-left" size={28} color={colors.onSurfaceInverse} />
+            </Pressable>
+            <Text style={styles.pageCounter}>{pageIndex + 1} / {Math.max(spreadCount, 1)}</Text>
+            <Pressable
+              accessibilityLabel="Page suivante"
+              disabled={pageIndex >= spreadCount - 1}
+              onPress={() => {
+                const nextIndex = Math.min(pageIndex + 1, spreadCount - 1);
+                pagerRef.current?.scrollTo({ x: nextIndex * bookWidth, animated: true });
+                setPageIndex(nextIndex);
+              }}
+              style={({ pressed }) => [styles.pageButton, pageIndex >= spreadCount - 1 && styles.pageButtonDisabled, pressed && styles.pageButtonPressed]}
+            >
+              <MaterialCommunityIcons name="chevron-right" size={28} color={colors.onSurfaceInverse} />
+            </Pressable>
+          </View>
+        </View>
       )}
     </SafeAreaView>
   );
 }
 
+function BookSpread({ width, height, image, testID }: { width: number; height: number; image: any; testID: string }) {
+  return (
+    <View style={[styles.spread, { width, height }]} testID={testID}>
+      <Image source={image} style={[styles.pageImage, { width, height }]} contentFit="contain" />
+      <View pointerEvents="none" style={[styles.spine, { height }]} />
+    </View>
+  );
+}
+
+function BookImagesSpread({ width, height, testID }: { width: number; height: number; testID: string }) {
+  const pageWidth = width / 2;
+  const overlap = 32;
+
+  return (
+    <View style={[styles.spread, { width, height }]} testID={testID}>
+      <View style={{ position: 'absolute', left: 0, width: pageWidth, height, overflow: 'hidden' }}>
+        <Image source={SECOND_JOURNAL_IMAGE} style={{ width: pageWidth + overlap, height }} contentFit="contain" />
+      </View>
+      <View style={{ position: 'absolute', left: pageWidth, width: pageWidth, height, overflow: 'hidden' }}>
+        <Image source={LAST_JOURNAL_IMAGE} style={{ position: 'absolute', left: -overlap, width: pageWidth + overlap, height }} contentFit="contain" />
+      </View>
+    </View>
+  );
+}
+
+function BookPage({ width, height, entry, image, seamless = false }: { width: number; height: number; entry?: any; image?: any; seamless?: boolean }) {
+  return (
+    <View style={[styles.page, seamless && styles.seamlessPage, { width, height }]}> 
+      {image ? (
+        <Image source={image} style={[styles.pageImage, { width, height }]} contentFit="contain" />
+      ) : entry ? (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.textPage}>
+          <Text style={styles.entryTitle}>{entry.title}</Text>
+          <View style={styles.rule} />
+          <View style={styles.bodyBlock}>
+            {String(entry.body || '').split('\n').map((line, index) => {
+              const trimmed = line.trim();
+              if (!trimmed) return <View key={`${entry.id}-${index}`} style={styles.bodySpacer} />;
+              if (trimmed.startsWith('### ')) {
+                return <Text key={`${entry.id}-${index}`} style={styles.bodyHeading}>{trimmed.replace(/^###\s*/, '')}</Text>;
+              }
+              return <Text key={`${entry.id}-${index}`} style={styles.entryBody}>{trimmed}</Text>;
+            })}
+          </View>
+        </ScrollView>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
-  list: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
+  bookArea: { flex: 1, justifyContent: 'center', paddingBottom: spacing.lg },
+  bookPager: { alignSelf: 'center' },
+  bookPages: { alignItems: 'center' },
+  spread: { flexDirection: 'row', position: 'relative' },
+  page: {
+    overflow: 'hidden',
+    backgroundColor: '#E9D7B0',
+    borderWidth: 1,
+    borderColor: '#8B5E3C',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  seamlessPage: { borderWidth: 0 },
+  pageImage: { position: 'absolute', top: 0 },
+  textPage: { padding: spacing.lg },
+  spine: { position: 'absolute', left: '50%', width: 2, backgroundColor: 'rgba(67, 35, 19, 0.5)' },
+  bookControls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xl, paddingTop: spacing.lg },
+  pageButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.brandPrimary },
+  pageButtonDisabled: { opacity: 0.35 },
+  pageButtonPressed: { opacity: 0.75 },
+  pageCounter: { ...type.small, color: colors.onSurfaceSecondary, minWidth: 54, textAlign: 'center' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   emptyText: { ...type.body, color: colors.onSurfaceSecondary, fontStyle: 'italic' },
   entry: { flexDirection: 'row', gap: spacing.md },
