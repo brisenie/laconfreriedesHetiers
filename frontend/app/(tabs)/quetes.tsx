@@ -8,10 +8,24 @@ import ScreenHeader from '@/src/components/ScreenHeader';
 
 const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/1iere quête la chasse 2026/quête chasse aux trésors 2026 completée .png');
+const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 
 export default function QuetesScreen() {
   const [showDetail, setShowDetail] = useState(false);
   const [showLabel, setShowLabel] = useState(false);
+  const [showAncientMessageLabel, setShowAncientMessageLabel] = useState(false);
+  const [detailImage, setDetailImage] = useState<any>(null);
+
+  const openDetail = (image: any) => {
+    setShowLabel(true);
+    setDetailImage(image);
+    setShowDetail(true);
+  };
+
+  const closeDetail = () => {
+    setShowDetail(false);
+    setDetailImage(null);
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="quetes-screen">
@@ -25,21 +39,33 @@ export default function QuetesScreen() {
 
           <Pressable
             accessibilityLabel="Ouvrir la chasse aux trésors 2026"
-            onPress={() => {
-              setShowLabel(true);
-              setShowDetail(true);
-            }}
+            onPress={() => openDetail(COMPLETED_QUEST_IMAGE)}
             style={styles.questMarker}
+          >
+            <Text style={styles.questMarkerText} aria-hidden="true"> </Text>
+          </Pressable>
+
+          {showAncientMessageLabel ? <Text style={styles.questMarkerSecondLabel}>Le message des anciens et la lettre du capitaine</Text> : null}
+
+          <Pressable
+            accessibilityLabel="Ouvrir le message des anciens"
+            onPress={() => {
+              if (!showAncientMessageLabel) {
+                setShowAncientMessageLabel(true);
+              }
+              openDetail(ANCIENT_MESSAGE_IMAGE);
+            }}
+            style={styles.questMarkerSecond}
           >
             <Text style={styles.questMarkerText} aria-hidden="true"> </Text>
           </Pressable>
         </View>
       </View>
 
-      {showDetail ? (
-        <Pressable style={styles.overlay} onPress={() => setShowDetail(false)}>
-          <Pressable style={styles.detailCard} onPress={() => setShowDetail(false)}>
-            <Image source={COMPLETED_QUEST_IMAGE} style={styles.detailImage} contentFit="contain" />
+      {showDetail && detailImage ? (
+        <Pressable style={styles.overlay} onPress={closeDetail}>
+          <Pressable style={styles.detailCard} onPress={closeDetail}>
+            <Image source={detailImage} style={styles.detailImage} contentFit="contain" />
           </Pressable>
         </Pressable>
       ) : null}
@@ -90,6 +116,40 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
     elevation: 0,
     transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+  },
+  questMarkerSecond: {
+    position: 'absolute',
+    left: '26.4%',
+    top: '54.0%',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+  },
+  questMarkerSecondLabel: {
+    position: 'absolute',
+    left: '26.4%',
+    top: '61.4%',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#070605',
+    textAlign: 'center',
+    maxWidth: 180,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   questMarkerLabel: {
     position: 'absolute',
