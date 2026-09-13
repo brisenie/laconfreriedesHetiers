@@ -30,7 +30,7 @@ const CARDS = [
     bottom: 0.765,
     left: 0.665,
     right: 0.955,
-    image: require('../../pnj/Les Infectés.png'),
+    image: require('../../../assets/images/kraken-enemy.png'),
   },
 ];
 
@@ -50,6 +50,11 @@ export default function MondeScreen() {
     }
 
     if (id === 'pnj') {
+      router.push('/pnj');
+      return;
+    }
+
+    if (id === 'ennemis') {
       router.push('/pnj');
       return;
     }
@@ -112,4 +117,5 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xxxl,
   },
+
 });

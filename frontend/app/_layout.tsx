@@ -14,12 +14,8 @@ export default function RootLayout() {
   const [loaded, error] = useIconFonts();
 
   useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
+    SplashScreen.hideAsync().catch(() => {});
   }, [loaded, error]);
-
-  if (!loaded && !error) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#161311' }}>
