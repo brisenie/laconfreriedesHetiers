@@ -8,7 +8,6 @@ import { colors, spacing, radius, type, fonts } from '@/src/theme';
 import { fetchJournal } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
-const MONTHS = ['JANV', 'FÉVR', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
 const LAST_JOURNAL_IMAGE = require('../../assets/images/journal/journal des infectés.jpg');
 const SECOND_JOURNAL_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 const FIRST_JOURNAL_IMAGE = require('../../assets/images/journal/chasse 2026.png');
@@ -64,16 +63,6 @@ Le choix de leur classe marque ainsi le véritable commencement de leur formatio
   },
 ];
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return { day: '??', month: '???', year: '' };
-  return {
-    day: String(d.getDate()).padStart(2, '0'),
-    month: MONTHS[d.getMonth()],
-    year: String(d.getFullYear()),
-  };
-}
-
 export default function JournalScreen() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +97,7 @@ export default function JournalScreen() {
       ) : entries.length === 0 ? (
         <View style={styles.empty}>
           <MaterialCommunityIcons name="notebook-outline" size={48} color={colors.brandTertiary} />
-          <Text style={styles.emptyText}>Aucune entrée pour l'instant.</Text>
+          <Text style={styles.emptyText}>Aucune entrée pour l’instant.</Text>
         </View>
       ) : (
         <View style={styles.bookArea}>
@@ -190,31 +179,6 @@ function BookImagesSpread({ width, height, testID }: { width: number; height: nu
       <View style={{ position: 'absolute', left: pageWidth, width: pageWidth, height, overflow: 'hidden' }}>
         <Image source={LAST_JOURNAL_IMAGE} style={{ position: 'absolute', left: -overlap, width: pageWidth + overlap, height }} contentFit="contain" />
       </View>
-    </View>
-  );
-}
-
-function BookPage({ width, height, entry, image, seamless = false }: { width: number; height: number; entry?: any; image?: any; seamless?: boolean }) {
-  return (
-    <View style={[styles.page, seamless && styles.seamlessPage, { width, height }]}> 
-      {image ? (
-        <Image source={image} style={[styles.pageImage, { width, height }]} contentFit="contain" />
-      ) : entry ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.textPage}>
-          <Text style={styles.entryTitle}>{entry.title}</Text>
-          <View style={styles.rule} />
-          <View style={styles.bodyBlock}>
-            {String(entry.body || '').split('\n').map((line, index) => {
-              const trimmed = line.trim();
-              if (!trimmed) return <View key={`${entry.id}-${index}`} style={styles.bodySpacer} />;
-              if (trimmed.startsWith('### ')) {
-                return <Text key={`${entry.id}-${index}`} style={styles.bodyHeading}>{trimmed.replace(/^###\s*/, '')}</Text>;
-              }
-              return <Text key={`${entry.id}-${index}`} style={styles.entryBody}>{trimmed}</Text>;
-            })}
-          </View>
-        </ScrollView>
-      ) : null}
     </View>
   );
 }
