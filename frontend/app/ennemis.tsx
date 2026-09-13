@@ -14,10 +14,10 @@ import { colors, spacing } from '@/src/theme';
 
 const ennemis = [
   {
-    id: 'infectes',
-    nom: 'Les Infectés',
-    description: 'Des créatures corrompues qui hantent les terres oubliées.',
-    image: require('../pnj/Les Infectés.png'),
+    id: 'kraken',
+    nom: 'Le Kraken',
+    description: 'Une immense créature abyssale capable de repousser les navires les plus hardis.',
+    image: require('../assets/images/kraken-enemy.png'),
   },
 ];
 
@@ -40,11 +40,7 @@ export default function EnnemisScreen() {
           <Pressable
             key={ennemi.id}
             style={styles.card}
-            onPress={() => {
-              if (ennemi.id === 'infectes') {
-                router.push('/pnj');
-              }
-            }}
+            onPress={() => {}}
           >
             <Image source={ennemi.image} style={styles.image} resizeMode="cover" />
 
