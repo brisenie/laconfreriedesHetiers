@@ -13,6 +13,7 @@ import {
             import { MaterialCommunityIcons } from '@expo/vector-icons';
             import { storage } from '@/src/utils/storage';
             import { useFocusEffect } from 'expo-router';
+            import { isAcceptedPassword } from '@/src/utils/password';
 
             type Personnage = {
               identifiant: string;
@@ -118,7 +119,7 @@ import {
                                                                                                                                                                               if (!unlockData) return;
                                                                                                                                                                               const expectedCode = unlockData.code;
                                                                                                                                                                               const storageKey = unlockData.key;
-                                                                                                                                                                              if (code.trim().toUpperCase() !== expectedCode) {
+                                                                                                                                                                              if (!isAcceptedPassword(code, expectedCode)) {
                                                                                                                                                                                 setCodeError(true);
                                                                                                                                                                                 return;
                                                                                                                                                                               }

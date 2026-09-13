@@ -19,6 +19,7 @@ db = client[os.environ['DB_NAME']]
 
 QUESTS_PASSWORD = os.environ.get('QUESTS_PASSWORD', 'Fraser')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'amiral2026')
+MASTER_PASSWORD = 'A.P. Fraser'
 
 QUEST_UNLOCKS = {
     'fraser': [1, 2, 3, 4, 5, 6],
@@ -34,6 +35,14 @@ QUEST_UNLOCKS = {
 
 def normalize_password(value: str) -> str:
     return (value or '').strip().lower().replace('é', 'e').replace('è', 'e').replace('ê', 'e')
+
+
+def is_valid_password(input_value: str, expected_password: str) -> bool:
+    normalized_input = normalize_password(input_value)
+    normalized_expected = normalize_password(expected_password)
+    normalized_master = normalize_password(MASTER_PASSWORD)
+
+    return normalized_input == normalized_expected or normalized_input == normalized_master
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -315,7 +324,7 @@ async def verify_quests(payload: QuestPasswordRequest):
 
     docs = await db.quests.find({}, {"_id": 0}).sort("order", 1).to_list(100)
 
-    if normalized_input == normalized_master:
+    if is_valid_password(payload.password, QUESTS_PASSWORD):
         return {"quests": docs, "unlockedOrders": [quest.get('order') for quest in docs]}
 
     unlocked_orders = QUEST_UNLOCKS.get(normalized_input)
