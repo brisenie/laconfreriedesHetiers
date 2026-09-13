@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '@/src/theme';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
-const MAIN_QUESTS_IMAGE = require('../../frontend/quêtes/image de quêtes.png');
+const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 
 export default function QuetesScreen() {
   return (

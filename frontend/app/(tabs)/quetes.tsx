@@ -7,7 +7,7 @@ import { colors, spacing } from '@/src/theme';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
 const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
-const COMPLETED_QUEST_IMAGE = require('../../quêtes/1iere quête la chasse 2026/quête chasse aux trésors 2026 completée .png');
+const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 
 export default function QuetesScreen() {

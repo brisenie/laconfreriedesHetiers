@@ -24,7 +24,14 @@ const CARDS = [
   { id: 'pnj', top: 0.315, bottom: 0.535, left: 0.665, right: 0.955 },
   { id: 'reliques', top: 0.545, bottom: 0.765, left: 0.045, right: 0.355 },
   { id: 'legendes', top: 0.545, bottom: 0.765, left: 0.355, right: 0.665 },
-  { id: 'ennemis', top: 0.545, bottom: 0.765, left: 0.665, right: 0.955 },
+  {
+    id: 'ennemis',
+    top: 0.545,
+    bottom: 0.765,
+    left: 0.665,
+    right: 0.955,
+    image: require('../../pnj/Les Infectés.png'),
+  },
 ];
 
 export default function MondeScreen() {
@@ -77,8 +84,18 @@ export default function MondeScreen() {
                 left: imgWidth * c.left,
                 width: imgWidth * (c.right - c.left),
                 height: imgHeight * (c.bottom - c.top),
+                overflow: 'hidden',
               }}
-            />
+            >
+              {c.image ? (
+                <Image
+                  source={c.image}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  transition={200}
+                />
+              ) : null}
+            </Pressable>
           ))}
         </View>
       </ScrollView>
