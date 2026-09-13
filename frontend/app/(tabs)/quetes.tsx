@@ -42,7 +42,7 @@ export default function QuetesScreen() {
             onPress={() => openDetail(COMPLETED_QUEST_IMAGE)}
             style={styles.questMarker}
           >
-            <Text style={styles.questMarkerText} aria-hidden="true"> </Text>
+            <Text style={styles.questMarkerText}> </Text>
           </Pressable>
 
           {showAncientMessageLabel ? <Text style={styles.questMarkerSecondLabel}>Le message des anciens et la lettre du capitaine</Text> : null}
@@ -57,7 +57,7 @@ export default function QuetesScreen() {
             }}
             style={styles.questMarkerSecond}
           >
-            <Text style={styles.questMarkerText} aria-hidden="true"> </Text>
+            <Text style={styles.questMarkerText}> </Text>
           </Pressable>
         </View>
       </View>
