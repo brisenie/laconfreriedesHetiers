@@ -30,7 +30,7 @@ const CARDS = [
     bottom: 0.765,
     left: 0.665,
     right: 0.955,
-    image: require('../../assets/images/kraken-enemy.png'),
+    image: require('../../Monde/ennemis/kraken.png'),
   },
 ];
 
