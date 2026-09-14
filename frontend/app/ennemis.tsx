@@ -12,14 +12,14 @@ import { useRouter } from 'expo-router';
 
 import { colors, spacing } from '@/src/theme';
 
-const ennemis = [
-  {
-    id: 'kraken',
-    nom: 'Le Kraken',
-    description: 'Une immense créature abyssale capable de repousser les navires les plus hardis.',
-    image: require('../assets/images/kraken-enemy.png'),
-  },
-];
+const infectes = {
+  id: 'infectes',
+  nom: 'Les Infectés',
+  sousTitre: 'Des êtres mystérieusement corrompus',
+  description:
+    'Ils attaquent seuls ou en groupe. Ils peuvent être décorrumpus grâce au baume d’argile.',
+  image: require('../pnj/Les Infectés.png'),
+};
 
 export default function EnnemisScreen() {
   const router = useRouter();
@@ -31,25 +31,27 @@ export default function EnnemisScreen() {
           <Text style={styles.backButtonText}>← Retour</Text>
         </Pressable>
 
-        <Text style={styles.title}>Ennemis</Text>
-        <Text style={styles.subtitle}>
-          Liste des menaces connues et des créatures encore non identifiées.
-        </Text>
+        <View style={styles.card}>
+          <Image
+            source={infectes.image}
+            style={styles.image}
+            resizeMode="contain"
+          />
 
-        {ennemis.map((ennemi) => (
-          <Pressable
-            key={ennemi.id}
-            style={styles.card}
-            onPress={() => {}}
-          >
-            <Image source={ennemi.image} style={styles.image} resizeMode="cover" />
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle}>{infectes.nom}</Text>
+            <Text style={styles.cardSubtitle}>{infectes.sousTitre}</Text>
+            <View style={styles.separator} />
+            <Text style={styles.cardDescription}>{infectes.description}</Text>
 
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{ennemi.nom}</Text>
-              <Text style={styles.cardDescription}>{ennemi.description}</Text>
+            <View style={styles.quoteBox}>
+              <Text style={styles.quoteText}>
+                « Dix fois ils tomberont. Dix fois ils se relèveront. Seule la dixième
+                chute pourra enfin les éloigner pour quelque temps. »
+              </Text>
             </View>
-          </Pressable>
-        ))}
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -62,13 +64,15 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    padding: spacing.xl,
-    paddingBottom: spacing.xxxl,
+    flexGrow: 1,
+    padding: 0,
   },
 
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
   },
 
   backButtonText: {
@@ -77,36 +81,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  title: {
-    color: colors.onSurface,
-    fontSize: 32,
-    fontWeight: '800',
-    marginBottom: spacing.sm,
-  },
-
-  subtitle: {
-    color: colors.onSurfaceSecondary,
-    fontSize: 15,
-    marginBottom: spacing.xl,
-  },
-
   card: {
+    flex: 1,
     backgroundColor: colors.surfaceSecondary,
-    borderRadius: 16,
+    borderRadius: 0,
     overflow: 'hidden',
-    marginBottom: spacing.lg,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: colors.border,
+    minHeight: '100%',
   },
 
   image: {
     width: '100%',
-    height: 220,
+    height: 360,
     backgroundColor: '#1e1513',
   },
 
   cardContent: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    paddingBottom: spacing.xxxl,
   },
 
   cardTitle: {
@@ -116,9 +110,37 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
 
+  cardSubtitle: {
+    color: colors.onSurfaceSecondary,
+    fontSize: 15,
+    marginBottom: spacing.md,
+  },
+
+  separator: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginBottom: spacing.md,
+  },
+
   cardDescription: {
     color: colors.onSurfaceSecondary,
     fontSize: 14,
     lineHeight: 20,
+    marginBottom: spacing.lg,
+  },
+
+  quoteBox: {
+    backgroundColor: '#1f1a16',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+
+  quoteText: {
+    color: colors.onSurface,
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
   },
 });
