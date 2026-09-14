@@ -9,11 +9,13 @@ import ScreenHeader from '@/src/components/ScreenHeader';
 const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
+const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/quête du forgeron expliquée.png');
 
 export default function QuetesScreen() {
   const [showDetail, setShowDetail] = useState(false);
   const [showLabel, setShowLabel] = useState(false);
   const [showAncientMessageLabel, setShowAncientMessageLabel] = useState(false);
+  const [showForgeronLabel, setShowForgeronLabel] = useState(false);
   const [detailImage, setDetailImage] = useState<any>(null);
 
   const openDetail = (image: any) => {
@@ -56,6 +58,21 @@ export default function QuetesScreen() {
               openDetail(ANCIENT_MESSAGE_IMAGE);
             }}
             style={styles.questMarkerSecond}
+          >
+            <Text style={styles.questMarkerText}> </Text>
+          </Pressable>
+
+          {showForgeronLabel ? <Text style={styles.questMarkerForgeronLabel}>LA forge des Anciens</Text> : null}
+
+          <Pressable
+            accessibilityLabel="Ouvrir la quête du forgeron expliquée"
+            onPress={() => {
+              if (!showForgeronLabel) {
+                setShowForgeronLabel(true);
+              }
+              openDetail(FORGERON_EXPLAINED_IMAGE);
+            }}
+            style={styles.questMarkerForgeron}
           >
             <Text style={styles.questMarkerText}> </Text>
           </Pressable>
@@ -136,10 +153,44 @@ const styles = StyleSheet.create({
     elevation: 0,
     transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
   },
+  questMarkerForgeron: {
+    position: 'absolute',
+    left: '35.4%',
+    top: '45.5%',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+  },
   questMarkerSecondLabel: {
     position: 'absolute',
     left: '26.4%',
     top: '61.4%',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#070605',
+    textAlign: 'center',
+    maxWidth: 180,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  questMarkerForgeronLabel: {
+    position: 'absolute',
+    left: '35.4%',
+    top: '53.8%',
     transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
     fontSize: 14,
     fontWeight: '700',
