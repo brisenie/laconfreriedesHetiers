@@ -92,7 +92,7 @@ export default function EnnemisScreen() {
                   <View style={styles.unlockBox}>
                     <Text style={styles.unlockTitle}>Fiche verrouillée</Text>
                     <Text style={styles.unlockDescription}>
-                      Entrez le mot de passe pour révéler Moumoune.
+                      Entrez le mot de passe pour révéler cette fiche.
                     </Text>
                     <TextInput
                       value={moumounePassword}
@@ -117,7 +117,7 @@ export default function EnnemisScreen() {
                       onPress={unlockMoumoune}
                       style={styles.unlockButton}
                       accessibilityRole="button"
-                      accessibilityLabel="Débloquer la fiche de Moumoune"
+                      accessibilityLabel="Débloquer cette fiche"
                     >
                       <Text style={styles.unlockButtonText}>DÉBLOQUER</Text>
                     </Pressable>
