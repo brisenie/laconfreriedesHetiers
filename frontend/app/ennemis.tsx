@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,11 +6,15 @@ import {
   View,
   Image,
   Pressable,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { colors, spacing } from '@/src/theme';
+import { isAcceptedPassword } from '@/src/utils/password';
+
+const MOUMOUNE_PASSWORD = 'Moumoune';
 
 const fiches = [
   {
@@ -36,6 +40,19 @@ const fiches = [
 
 export default function EnnemisScreen() {
   const router = useRouter();
+  const [moumounePassword, setMoumounePassword] = useState('');
+  const [moumouneUnlocked, setMoumouneUnlocked] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+
+  const unlockMoumoune = () => {
+    if (isAcceptedPassword(moumounePassword, MOUMOUNE_PASSWORD)) {
+      setMoumouneUnlocked(true);
+      setPasswordError(false);
+      return;
+    }
+
+    setPasswordError(true);
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -51,7 +68,10 @@ export default function EnnemisScreen() {
             <View key={fiche.id} style={styles.card}>
               <Image
                 source={fiche.image}
-                style={styles.image}
+                style={[
+                  styles.image,
+                ]}
+                tintColor={fiche.id === 'moumoune' ? '#000' : undefined}
                 resizeMode="contain"
               />
 
@@ -59,13 +79,52 @@ export default function EnnemisScreen() {
                 <Text style={styles.cardTitle}>{fiche.nom}</Text>
                 <Text style={styles.cardSubtitle}>{fiche.sousTitre}</Text>
                 <View style={styles.separator} />
-                <Text style={styles.cardDescription}>{fiche.description}</Text>
 
-                {fiche.quote ? (
-                  <View style={styles.quoteBox}>
-                    <Text style={styles.quoteText}>{fiche.quote}</Text>
+                {fiche.id === 'moumoune' && !moumouneUnlocked ? (
+                  <View style={styles.unlockBox}>
+                    <Text style={styles.unlockTitle}>Fiche verrouillée</Text>
+                    <Text style={styles.unlockDescription}>
+                      Entrez le mot de passe pour révéler Moumoune.
+                    </Text>
+                    <TextInput
+                      value={moumounePassword}
+                      onChangeText={(value) => {
+                        setMoumounePassword(value);
+                        setPasswordError(false);
+                      }}
+                      onSubmitEditing={unlockMoumoune}
+                      placeholder="Mot de passe"
+                      placeholderTextColor={colors.onSurfaceTertiary}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      style={styles.passwordInput}
+                      accessibilityLabel="Mot de passe de Moumoune"
+                    />
+                    {passwordError ? (
+                      <Text style={styles.errorText}>Mot de passe incorrect.</Text>
+                    ) : null}
+                    <Pressable
+                      onPress={unlockMoumoune}
+                      style={styles.unlockButton}
+                      accessibilityRole="button"
+                      accessibilityLabel="Débloquer la fiche de Moumoune"
+                    >
+                      <Text style={styles.unlockButtonText}>DÉBLOQUER</Text>
+                    </Pressable>
                   </View>
-                ) : null}
+                ) : (
+                  <>
+                    <Text style={styles.cardDescription}>{fiche.description}</Text>
+
+                    {fiche.quote ? (
+                      <View style={styles.quoteBox}>
+                        <Text style={styles.quoteText}>{fiche.quote}</Text>
+                      </View>
+                    ) : null}
+                  </>
+                )}
               </View>
             </View>
           ))}
@@ -166,5 +225,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontStyle: 'italic',
+  },
+
+  unlockBox: {
+    backgroundColor: '#1f1a16',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+
+  unlockTitle: {
+    color: colors.onSurface,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+
+  unlockDescription: {
+    color: colors.onSurfaceSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: spacing.md,
+  },
+
+  passwordInput: {
+    color: colors.onSurface,
+    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 15,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+
+  errorText: {
+    color: '#D98B78',
+    fontSize: 13,
+    marginTop: spacing.xs,
+  },
+
+  unlockButton: {
+    alignItems: 'center',
+    backgroundColor: colors.brandPrimary,
+    borderRadius: 8,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+
+  unlockButtonText: {
+    color: colors.onBrandPrimary,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
 });
