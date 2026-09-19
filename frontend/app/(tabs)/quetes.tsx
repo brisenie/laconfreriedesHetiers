@@ -9,7 +9,7 @@ import ScreenHeader from '@/src/components/ScreenHeader';
 const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
-const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/quête du forgeron expliquée.png');
+const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Forge_des_Anciens.png');
 
 export default function QuetesScreen() {
   const [showDetail, setShowDetail] = useState(false);
