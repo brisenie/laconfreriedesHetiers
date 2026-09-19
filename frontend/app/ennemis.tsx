@@ -76,8 +76,16 @@ export default function EnnemisScreen() {
               />
 
               <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{fiche.nom}</Text>
-                <Text style={styles.cardSubtitle}>{fiche.sousTitre}</Text>
+                <Text style={styles.cardTitle}>
+                  {fiche.id === 'moumoune' && !moumouneUnlocked
+                    ? 'Identité inconnue'
+                    : fiche.nom}
+                </Text>
+                <Text style={styles.cardSubtitle}>
+                  {fiche.id === 'moumoune' && !moumouneUnlocked
+                    ? 'Ennemi verrouillé'
+                    : fiche.sousTitre}
+                </Text>
                 <View style={styles.separator} />
 
                 {fiche.id === 'moumoune' && !moumouneUnlocked ? (
