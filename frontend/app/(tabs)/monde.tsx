@@ -96,7 +96,7 @@ export default function MondeScreen() {
                 <Image
                   source={c.image}
                   style={StyleSheet.absoluteFill}
-                  contentFit="cover"
+                  contentFit="fill"
                   transition={200}
                 />
               ) : null}
