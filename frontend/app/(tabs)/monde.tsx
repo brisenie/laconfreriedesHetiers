@@ -93,12 +93,14 @@ export default function MondeScreen() {
               }}
             >
               {c.image ? (
-                <Image
-                  source={c.image}
-                  style={StyleSheet.absoluteFill}
-                  contentFit="fill"
-                  transition={200}
-                />
+                <View style={styles.cardImageClip}>
+                  <Image
+                    source={c.image}
+                    style={styles.cardImage}
+                    contentFit="fill"
+                    transition={200}
+                  />
+                </View>
               ) : null}
             </Pressable>
           ))}
@@ -116,6 +118,16 @@ const styles = StyleSheet.create({
 
   content: {
     paddingBottom: spacing.xxxl,
+  },
+
+  cardImageClip: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+
+  cardImage: {
+    width: '100%',
+    height: '100%',
   },
 
 });
