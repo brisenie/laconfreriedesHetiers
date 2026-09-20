@@ -71,7 +71,6 @@ export default function EnnemisScreen() {
                 style={[
                   styles.image,
                 ]}
-                tintColor={fiche.id === 'moumoune' ? '#000' : undefined}
                 resizeMode="contain"
               />
 
