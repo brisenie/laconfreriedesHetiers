@@ -23,7 +23,7 @@ import {
                       image: ImageSourcePropType;
                       };
 
-                      const personnages: Personnage[] = [
+                      const allPersonnages: Personnage[] = [
                         {
                             identifiant: 'capitaine',
                                 nom: 'Capitaine A.P. Fraser',
@@ -82,6 +82,18 @@ import {
                                                                                                                                             },
                                                                                                                 ];
 
+const personnagesDansOrdre = [
+  'capitaine',
+  'oiseau',
+  'infectes',
+  'moumoune',
+  'aldren',
+  'malgrath',
+  'sorciere-verte',
+]
+  .map((identifiant) => allPersonnages.find((personnage) => personnage.identifiant === identifiant))
+  .filter((personnage): personnage is Personnage => Boolean(personnage));
+
                                                                                                                                                                           const ALDREN_UNLOCK_CODE = 'ALDREN';
                                                                                                                                                                           const ALDREN_UNLOCK_KEY = 'pnj.aldren.permanent';
                                                                                                                                                             const MALGRATH_UNLOCK_CODE = 'MALGRATH';
@@ -92,10 +104,10 @@ import {
                                                                                                                                                                           const MOUMOUNE_UNLOCK_KEY = 'pnj.moumoune.permanent';
 
                                                                                                                 export default function PnjScreen() {
-                                                                                                                                                                            const [aldrenUnlocked, setAldrenUnlocked] = useState(false);
+                                                                                                                                                                            const [aldrenUnlocked, setAldrenUnlocked] = useState(true);
                                                                                                                                                                             const [malgrathUnlocked, setMalgrathUnlocked] = useState(false);
                                                                                                                                                                             const [sorciereVerteUnlocked, setSorciereVerteUnlocked] = useState(false);
-                                                                                                                                                                            const [moumouneUnlocked, setMoumouneUnlocked] = useState(false);
+                                                                                                                                                                            const [moumouneUnlocked, setMoumouneUnlocked] = useState(true);
                                                                                                                                                                             const [code, setCode] = useState('');
                                                                                                                                                                             const [codeError, setCodeError] = useState(false);
                                                                                                                                                                             const [permanentUnlock, setPermanentUnlock] = useState(false);
@@ -114,10 +126,10 @@ import {
                                                                                                                                                                                 storage.getItem(MOUMOUNE_UNLOCK_KEY, false),
                                                                                                                                                                               ]).then(([aldren, malgrath, sorciereVerte, moumoune]) => {
                                                                                                                                                                                 if (!active) return;
-                                                                                                                                                                                setAldrenUnlocked(Boolean(aldren));
+                                                                                                                                                                                 setAldrenUnlocked(true);
                                                                                                                                                                                 setMalgrathUnlocked(Boolean(malgrath));
                                                                                                                                                                                 setSorciereVerteUnlocked(Boolean(sorciereVerte));
-                                                                                                                                                                                setMoumouneUnlocked(Boolean(moumoune));
+                                                                                                                                                                                 setMoumouneUnlocked(true);
                                                                                                                                                                                 setLoading(false);
                                                                                                                                                                               });
                                                                                                                                                                               return () => { active = false; };
@@ -163,7 +175,7 @@ import {
                                                                                                                                                                                                     </View>
 
                                                                                                                                                                                                           <View style={styles.liste}>
-                                                                                                                                                                                                                  {personnages.map((personnage) => {
+                                                                                                                                                                                                                  {personnagesDansOrdre.map((personnage) => {
                                                                                                                                                                                                                     const personnageLocked = (personnage.identifiant === 'aldren' && !aldrenUnlocked)
                                                                                                                                                                                                                       || (personnage.identifiant === 'malgrath' && !malgrathUnlocked)
                                                                                                                                                                                                                       || (personnage.identifiant === 'sorciere-verte' && !sorciereVerteUnlocked)

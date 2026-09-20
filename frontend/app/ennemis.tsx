@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,15 +6,11 @@ import {
   View,
   Image,
   Pressable,
-  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { colors, spacing } from '@/src/theme';
-import { isAcceptedPassword } from '@/src/utils/password';
-
-const MOUMOUNE_PASSWORD = 'Moumoune';
 
 const fiches = [
   {
@@ -40,19 +36,6 @@ const fiches = [
 
 export default function EnnemisScreen() {
   const router = useRouter();
-  const [moumounePassword, setMoumounePassword] = useState('');
-  const [moumouneUnlocked, setMoumouneUnlocked] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-
-  const unlockMoumoune = () => {
-    if (isAcceptedPassword(moumounePassword, MOUMOUNE_PASSWORD)) {
-      setMoumouneUnlocked(true);
-      setPasswordError(false);
-      return;
-    }
-
-    setPasswordError(true);
-  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -76,62 +59,20 @@ export default function EnnemisScreen() {
 
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>
-                  {fiche.id === 'moumoune' && !moumouneUnlocked
-                    ? 'Identité inconnue'
-                    : fiche.nom}
+                  {fiche.nom}
                 </Text>
                 <Text style={styles.cardSubtitle}>
-                  {fiche.id === 'moumoune' && !moumouneUnlocked
-                    ? 'Ennemi verrouillé'
-                    : fiche.sousTitre}
+                  {fiche.sousTitre}
                 </Text>
                 <View style={styles.separator} />
 
-                {fiche.id === 'moumoune' && !moumouneUnlocked ? (
-                  <View style={styles.unlockBox}>
-                    <Text style={styles.unlockTitle}>Fiche verrouillée</Text>
-                    <Text style={styles.unlockDescription}>
-                      Entrez le mot de passe pour révéler cette fiche.
-                    </Text>
-                    <TextInput
-                      value={moumounePassword}
-                      onChangeText={(value) => {
-                        setMoumounePassword(value);
-                        setPasswordError(false);
-                      }}
-                      onSubmitEditing={unlockMoumoune}
-                      placeholder="Mot de passe"
-                      placeholderTextColor={colors.onSurfaceTertiary}
-                      secureTextEntry
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      returnKeyType="done"
-                      style={styles.passwordInput}
-                      accessibilityLabel="Mot de passe de Moumoune"
-                    />
-                    {passwordError ? (
-                      <Text style={styles.errorText}>Mot de passe incorrect.</Text>
-                    ) : null}
-                    <Pressable
-                      onPress={unlockMoumoune}
-                      style={styles.unlockButton}
-                      accessibilityRole="button"
-                      accessibilityLabel="Débloquer cette fiche"
-                    >
-                      <Text style={styles.unlockButtonText}>DÉBLOQUER</Text>
-                    </Pressable>
-                  </View>
-                ) : (
-                  <>
-                    <Text style={styles.cardDescription}>{fiche.description}</Text>
+                <Text style={styles.cardDescription}>{fiche.description}</Text>
 
-                    {fiche.quote ? (
-                      <View style={styles.quoteBox}>
-                        <Text style={styles.quoteText}>{fiche.quote}</Text>
-                      </View>
-                    ) : null}
-                  </>
-                )}
+                {fiche.quote ? (
+                  <View style={styles.quoteBox}>
+                    <Text style={styles.quoteText}>{fiche.quote}</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
           ))}
