@@ -78,32 +78,49 @@ export default function MondeScreen() {
             transition={200}
           />
 
-          {CARDS.map((c) => (
-            <Pressable
-              key={c.id}
-              testID={`univers-card-${c.id}`}
-              onPress={() => onCard(c.id)}
-              style={{
-                position: 'absolute',
-                top: imgHeight * c.top,
-                left: imgWidth * c.left,
-                width: imgWidth * (c.right - c.left),
-                height: imgHeight * (c.bottom - c.top),
-                overflow: 'hidden',
-              }}
-            >
-              {c.image ? (
-                <View style={styles.cardImageClip}>
-                  <Image
-                    source={c.image}
-                    style={styles.cardImage}
-                    contentFit="fill"
-                    transition={200}
-                  />
-                </View>
-              ) : null}
-            </Pressable>
-          ))}
+          {CARDS.map((c) => {
+            // Fixed, explicit pixel box for this card — computed once here
+            // instead of being left to percentage styles, so the card's
+            // own image can never influence the size of its clickable box
+            // (this is what was letting the Ennemis card grow taller than
+            // Reliques / Légendes and spill into the PNJ row above it).
+            const cardWidth = imgWidth * (c.right - c.left);
+            const cardHeight = imgHeight * (c.bottom - c.top);
+            const cardTop = imgHeight * c.top;
+            const cardLeft = imgWidth * c.left;
+
+            return (
+              <Pressable
+                key={c.id}
+                testID={`univers-card-${c.id}`}
+                onPress={() => onCard(c.id)}
+                style={{
+                  position: 'absolute',
+                  top: cardTop,
+                  left: cardLeft,
+                  width: cardWidth,
+                  height: cardHeight,
+                  overflow: 'hidden',
+                }}
+              >
+                {c.image ? (
+                  <View
+                    style={[
+                      styles.cardImageClip,
+                      { width: cardWidth, height: cardHeight },
+                    ]}
+                  >
+                    <Image
+                      source={c.image}
+                      style={{ width: cardWidth, height: cardHeight }}
+                      contentFit="fill"
+                      transition={200}
+                    />
+                  </View>
+                ) : null}
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -121,13 +138,9 @@ const styles = StyleSheet.create({
   },
 
   cardImageClip: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
     overflow: 'hidden',
   },
-
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
-
 });
