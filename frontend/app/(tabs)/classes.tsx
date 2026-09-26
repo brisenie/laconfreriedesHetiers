@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 
 import { Image } from 'expo-image';
@@ -22,6 +23,7 @@ import { fetchClasses } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
 const classImages: Record<string, any> = {
+  Capitaine: require('@/assets/classes/capitaine.png'),
   Alchimiste: require('@/assets/classes/alchimiste.png'),
   Bosco: require('@/assets/classes/Bosco.png'),
   Bretteur: require('@/assets/classes/Bretteur.png'),
@@ -44,18 +46,26 @@ const classImages: Record<string, any> = {
 
 const localClasses = [
   {
+    id: 'capitaine',
+    order: 0,
+    name: 'Capitaine',
+    subtitle: 'Meneur de la Confrérie',
+    description:
+      'Le Capitaine est un meneur, un négociateur et un homme de réputation. Là où les autres Héritiers comptent sur leurs armes, leurs connaissances ou leur savoir-faire, le Capitaine peut compter sur son nom, son pavillon et les liens qu'il a tissés au fil de ses voyages.',
+  },
+  {
     id: 'alchimiste',
     order: 1,
     name: 'Alchimiste',
     subtitle: 'Maître des potions et des transformations',
     description:
-      'L’Alchimiste étudie les plantes, les minéraux et les anciennes recettes afin de fabriquer des potions et des remèdes.',
+      'L'Alchimiste étudie les plantes, les minéraux et les anciennes recettes afin de fabriquer des potions et des remèdes.',
   },
   {
     id: 'bosco',
     order: 2,
     name: 'Bosco',
-    subtitle: 'Gardien de l’équipage',
+    subtitle: 'Gardien de l'équipage',
     description:
       'Le Bosco protège son équipage et utilise sa force pour surmonter les obstacles.',
   },
@@ -81,7 +91,7 @@ const localClasses = [
     name: 'Éclaireur',
     subtitle: 'Les yeux de la Confrérie',
     description:
-      'L’Éclaireur observe les environs, repère les dangers et guide ses compagnons.',
+      'L'Éclaireur observe les environs, repère les dangers et guide ses compagnons.',
   },
   {
     id: 'maitre-des-marees',
@@ -97,7 +107,7 @@ const localClasses = [
     name: 'Médecin de Bord',
     subtitle: 'Protecteur des aventuriers',
     description:
-      'Le Médecin de Bord soigne les blessures et veille sur la santé de l’équipage.',
+      'Le Médecin de Bord soigne les blessures et veille sur la santé de l'équipage.',
   },
   {
     id: 'messager',
@@ -113,7 +123,7 @@ const localClasses = [
     name: 'Navigateur',
     subtitle: 'Guide des mers inconnues',
     description:
-      'Le Navigateur utilise les cartes, les étoiles et la boussole pour guider l’équipage.',
+      'Le Navigateur utilise les cartes, les étoiles et la boussole pour guider l'équipage.',
   },
   {
     id: 'tireur-elite',
@@ -121,7 +131,7 @@ const localClasses = [
     name: "Tireur d'Élite",
     subtitle: 'Maître de la précision',
     description:
-      'Le Tireur d’Élite utilise son calme, son observation et sa précision.',
+      'Le Tireur d'Élite utilise son calme, son observation et sa précision.',
   },
 ];
 
@@ -139,6 +149,8 @@ export default function ClassesScreen() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
+  const { width } = useWindowDimensions();
+  const isWideScreen = width >= 800;
 
   useEffect(() => {
     fetchClasses()
@@ -173,7 +185,7 @@ export default function ClassesScreen() {
       const safeName = (classe.name || 'classe')
         .toLowerCase()
         .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[̀-ͯ]/g, '')
         .replace(/[^a-z0-9]+/g, '-');
       const fileUri = `${FileSystem.Paths.cache.uri}${safeName || 'classe'}.txt`;
 
@@ -189,99 +201,216 @@ export default function ClassesScreen() {
       console.error('Erreur pendant le téléchargement de la classe :', error);
       Alert.alert(
         'Téléchargement impossible',
-        'Le fichier n’a pas pu être préparé.'
+        'Le fichier n'a pas pu être préparé.'
       );
     }
   };
 
-  return (
-    <SafeAreaView
-      style={styles.root}
-      edges={['top']}
-      testID="classes-screen"
-    >
-      <ScreenHeader
-        title="LES CLASSES"
-        subtitle="Les dix voies des Héritiers"
-        icon="sword-cross"
-      />
-
-      {loading ? (
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <ScreenHeader
+          title="LES CLASSES"
+          subtitle="Les onze voies des Héritiers"
+          icon="sword-cross"
+        />
         <ActivityIndicator
           color={colors.brandPrimary}
           style={{ marginTop: spacing.xxl }}
         />
-      ) : (
-        <ScrollView
-          contentContainerStyle={styles.grid}
-          showsVerticalScrollIndicator={false}
-        >
-          {items.map((classe) => (
-            <Pressable
-              key={classe.id}
-              onPress={() => open(classe)}
-              style={({ pressed }) => [
-                styles.card,
-                pressed && { opacity: 0.85 },
-              ]}
-              testID={`class-card-${classe.order}`}
-            >
+      </SafeAreaView>
+    );
+  }
+
+  // Two-column layout for wide screens
+  if (isWideScreen) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <ScreenHeader
+          title="LES CLASSES"
+          subtitle="Les onze voies des Héritiers"
+          icon="sword-cross"
+        />
+
+        <View style={styles.twoColumnContainer}>
+          {/* Left sidebar with class list */}
+          <ScrollView
+            style={styles.leftColumn}
+            showsVerticalScrollIndicator={false}
+          >
+            {items.map((classe) => (
+              <Pressable
+                key={classe.id}
+                onPress={() => setSelected(classe)}
+                style={({ pressed }) => [
+                  styles.listItem,
+                  selected?.id === classe.id && styles.listItemActive,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <View style={styles.listItemIcon}>
+                  <Image
+                    source={classImages[classe.name]}
+                    style={styles.listItemImage}
+                    contentFit="cover"
+                  />
+                </View>
+                <View style={styles.listItemContent}>
+                  <Text style={styles.listItemIndex}>
+                    N°{String(classe.order).padStart(2, '0')}
+                  </Text>
+                  <Text style={styles.listItemName} numberOfLines={1}>
+                    {classe.name}
+                  </Text>
+                  <Text style={styles.listItemSub} numberOfLines={1}>
+                    {classe.subtitle}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* Right column with details */}
+          {selected && (
+            <View style={styles.rightColumn}>
               <Image
-                source={classImages[classe.name]}
-                style={styles.cardImg}
-                contentFit="cover"
-                transition={200}
+                source={classImages[selected.name]}
+                style={styles.detailImage}
+                contentFit="contain"
               />
 
-              <View style={styles.cardFooter}>
-                <Text style={styles.cardIndex}>
-                  N°{String(classe.order).padStart(2, '0')}
-                </Text>
+              <View style={styles.detailActions}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionBtn,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={() => handleDownload(selected)}
+                >
+                  <MaterialCommunityIcons
+                    name="download-outline"
+                    size={16}
+                    color="#fff"
+                  />
+                  <Text style={styles.actionBtnText}>Télécharger</Text>
+                </Pressable>
 
-                <Text style={styles.cardName} numberOfLines={1}>
-                  {classe.name}
-                </Text>
-
-                <Text style={styles.cardSub} numberOfLines={1}>
-                  {classe.subtitle}
-                </Text>
-
-                <View style={styles.cardActions}>
-                  <Pressable
-                    style={[styles.actionBtn, styles.previewBtn]}
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      open(classe);
-                    }}
-                  >
-                    <MaterialCommunityIcons
-                      name="eye-outline"
-                      size={14}
-                      color={colors.brandPrimary}
-                    />
-                    <Text style={styles.actionText}>Aperçu</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.actionBtn, styles.downloadBtn]}
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      handleDownload(classe);
-                    }}
-                  >
-                    <MaterialCommunityIcons
-                      name="download-outline"
-                      size={14}
-                      color={colors.onSurface}
-                    />
-                    <Text style={styles.actionText}>Télécharger</Text>
-                  </Pressable>
-                </View>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionBtn,
+                    styles.printBtn,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    Alert.alert('Imprimer', `Imprimer la fiche de ${selected.name}`);
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="printer-outline"
+                    size={16}
+                    color={colors.brandPrimary}
+                  />
+                  <Text style={[styles.actionBtnText, { color: colors.brandPrimary }]}>
+                    Imprimer
+                  </Text>
+                </Pressable>
               </View>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
+
+              <View style={styles.detailInfo}>
+                <Text style={styles.detailIndex}>
+                  CLASSE N°{String(selected.order).padStart(2, '0')}
+                </Text>
+                <Text style={styles.detailTitle}>{selected.name}</Text>
+                <Text style={styles.detailSub}>{selected.subtitle}</Text>
+                <View style={styles.divider} />
+                <Text style={styles.detailDesc}>{selected.description}</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Grid layout for mobile screens (original)
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <ScreenHeader
+        title="LES CLASSES"
+        subtitle="Les onze voies des Héritiers"
+        icon="sword-cross"
+      />
+
+      <ScrollView
+        contentContainerStyle={styles.grid}
+        showsVerticalScrollIndicator={false}
+      >
+        {items.map((classe) => (
+          <Pressable
+            key={classe.id}
+            onPress={() => open(classe)}
+            style={({ pressed }) => [
+              styles.card,
+              pressed && { opacity: 0.85 },
+            ]}
+            testID={`class-card-${classe.order}`}
+          >
+            <Image
+              source={classImages[classe.name]}
+              style={styles.cardImg}
+              contentFit="cover"
+              transition={200}
+            />
+
+            <View style={styles.cardFooter}>
+              <Text style={styles.cardIndex}>
+                N°{String(classe.order).padStart(2, '0')}
+              </Text>
+
+              <Text style={styles.cardName} numberOfLines={1}>
+                {classe.name}
+              </Text>
+
+              <Text style={styles.cardSub} numberOfLines={1}>
+                {classe.subtitle}
+              </Text>
+
+              <View style={styles.cardActions}>
+                <Pressable
+                  style={[styles.actionBtn, styles.previewBtn]}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    open(classe);
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="eye-outline"
+                    size={14}
+                    color={colors.brandPrimary}
+                  />
+                  <Text style={styles.actionText}>Aperçu</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.actionBtn, styles.downloadBtn]}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    handleDownload(classe);
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="download-outline"
+                    size={14}
+                    color={colors.onSurface}
+                  />
+                  <Text style={styles.actionText}>Télécharger</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
 
       <Modal
         visible={selected !== null}
@@ -349,6 +478,156 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
 
+  // Two-column layout styles
+  twoColumnContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+
+  leftColumn: {
+    flex: 0.35,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+  },
+
+  listItem: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderWeak,
+    gap: spacing.sm,
+  },
+
+  listItemActive: {
+    backgroundColor: colors.brandPrimary,
+  },
+
+  listItemIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceTertiary,
+    overflow: 'hidden',
+  },
+
+  listItemImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  listItemContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  listItemIndex: {
+    fontSize: 8,
+    color: colors.brandPrimary,
+    letterSpacing: 1,
+    fontWeight: '600',
+  },
+
+  listItemName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.onSurface,
+  },
+
+  listItemSub: {
+    fontSize: 10,
+    color: colors.onSurfaceVariant,
+    fontStyle: 'italic',
+  },
+
+  rightColumn: {
+    flex: 0.65,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  detailImage: {
+    width: '100%',
+    height: '60%',
+    marginBottom: spacing.md,
+  },
+
+  detailActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.brandPrimary,
+    borderRadius: radius.sm,
+    gap: spacing.xs,
+  },
+
+  printBtn: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.brandPrimary,
+  },
+
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+
+  detailInfo: {
+    width: '100%',
+  },
+
+  detailIndex: {
+    fontSize: 10,
+    color: colors.brandPrimary,
+    letterSpacing: 2,
+    fontWeight: '600',
+  },
+
+  detailTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.onSurface,
+    marginTop: spacing.xs,
+  },
+
+  detailSub: {
+    fontSize: 12,
+    color: colors.brandPrimary,
+    fontStyle: 'italic',
+    marginTop: spacing.xs,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: colors.borderWeak,
+    marginVertical: spacing.sm,
+  },
+
+  detailDesc: {
+    fontSize: 12,
+    color: colors.onSurface,
+    lineHeight: 18,
+  },
+
+  // Grid layout styles (mobile)
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -404,16 +683,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.xs,
     marginTop: spacing.sm,
-  },
-
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
   },
 
   previewBtn: {
