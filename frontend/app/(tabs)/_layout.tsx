@@ -1,7 +1,10 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, useWindowDimensions } from 'expo-router';
 
 export default function TabsLayout() {
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width < 500;
+
   return (
     <Tabs
       screenOptions={{
@@ -9,12 +12,13 @@ export default function TabsLayout() {
         tabBarActiveTintColor: '#8b5a2b',
         tabBarInactiveTintColor: '#6b6b6b',
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: isSmallScreen ? 10 : 12,
           fontWeight: '700',
         },
         tabBarStyle: {
           backgroundColor: '#f4e7c5',
           borderTopColor: '#8b5a2b',
+          height: isSmallScreen ? 50 : 60,
         },
         headerStyle: {
           backgroundColor: '#f4e7c5',

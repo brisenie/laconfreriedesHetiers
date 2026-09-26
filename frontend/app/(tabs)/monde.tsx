@@ -1,5 +1,3 @@
-import React from 'react';
-import {
   View,
   StyleSheet,
   ScrollView,
@@ -144,3 +142,34 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
+import React, { useMemo } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+  Pressable,
+} from 'react-native';
+import { Image } from 'expo-image';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+
+import { colors, spacing } from '@/src/theme';
+
+const UNIVERS =
+  'https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/46qnx118_file_000000004cd0722fae6924f665c15167.png';
+
+const IMG_ASPECT = 1024 / 2048;
+
+// Responsive card layout based on screen size
+const getCardLayout = (width: number, isLandscape: boolean) => {
+  // Ultra small phones (< 380px) - single column, portrait only
+  if (width < 380 && !isLandscape) {
+    return [
+      { id: 'histoire', top: 0.25, bottom: 0.42, left: 0.05, right: 0.95 },
+      { id: 'monde', top: 0.44, bottom: 0.61, left: 0.05, right: 0.95 },
+      { id: 'pnj', top: 0.63, bottom: 0.8, left: 0.05, right: 0.95 },
+      { id: 'reliques', top: 0.82, bottom: 0.99, left: 0.05, right: 0.95 },
+      { id: 'legendes', top: 1.01, bottom: 1.18, left: 0.05,
+
