@@ -51,7 +51,7 @@ const localClasses = [
     name: 'Capitaine',
     subtitle: 'Meneur de la Confrérie',
     description:
-      'Le Capitaine est un meneur, un négociateur et un homme de réputation. Là où les autres Héritiers comptent sur leurs armes, leurs connaissances ou leur savoir-faire, le Capitaine peut compter sur son nom, son pavillon et les liens qu'il a tissés au fil de ses voyages.',
+      'Le Capitaine est un meneur, un négociateur et un homme de réputation. Là où les autres Héritiers comptent sur leurs armes, leurs connaissances ou leur savoir-faire, le Capitaine peut compter sur son nom, son pavillon et les liens qu\'il a tissés au fil de ses voyages.',
   },
   {
     id: 'alchimiste',
