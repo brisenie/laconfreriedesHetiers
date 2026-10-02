@@ -200,7 +200,7 @@ export default function ClassesScreen() {
       console.error('Erreur pendant le téléchargement de la classe :', error);
       Alert.alert(
         'Téléchargement impossible',
-        'Le fichier n'a pas pu être préparé.'
+        "Le fichier n'a pas pu être préparé."
       );
     }
   };
