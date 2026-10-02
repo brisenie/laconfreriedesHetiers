@@ -23,7 +23,6 @@ import { fetchClasses } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
 
 const classImages: Record<string, any> = {
-  Capitaine: require('@/assets/classes/capitaine.png'),
   Alchimiste: require('@/assets/classes/alchimiste.png'),
   Bosco: require('@/assets/classes/Bosco.png'),
   Bretteur: require('@/assets/classes/Bretteur.png'),
