@@ -46,92 +46,92 @@ const classImages: Record<string, any> = {
 
 const localClasses = [
   {
-    id: 'capitaine',
+    id: "capitaine",
     order: 0,
-    name: 'Capitaine',
-    subtitle: 'Meneur de la Confrérie',
+    name: "Capitaine",
+    subtitle: "Meneur de la Confrérie",
     description:
-      'Le Capitaine est un meneur, un négociateur et un homme de réputation. Là où les autres Héritiers comptent sur leurs armes, leurs connaissances ou leur savoir-faire, le Capitaine peut compter sur son nom, son pavillon et les liens qu\'il a tissés au fil de ses voyages.',
+      "Le Capitaine est un meneur, un négociateur et un homme de réputation. Là où les autres Héritiers comptent sur leurs armes, leurs connaissances ou leur savoir-faire, le Capitaine peut compter sur son nom, son pavillon et les liens qu\'il a tissés au fil de ses voyages.",
   },
   {
-    id: 'alchimiste',
+    id: "alchimiste",
     order: 1,
-    name: 'Alchimiste',
-    subtitle: 'Maître des potions et des transformations',
+    name: "Alchimiste",
+    subtitle: "Maître des potions et des transformations",
     description:
-      'L'Alchimiste étudie les plantes, les minéraux et les anciennes recettes afin de fabriquer des potions et des remèdes.',
+      "L'Alchimiste étudie les plantes, les minéraux et les anciennes recettes afin de fabriquer des potions et des remèdes.",
   },
   {
-    id: 'bosco',
+    id: "bosco",
     order: 2,
-    name: 'Bosco',
-    subtitle: 'Gardien de l'équipage',
+    name: "Bosco",
+    subtitle: "Gardien de l'équipage",
     description:
-      'Le Bosco protège son équipage et utilise sa force pour surmonter les obstacles.',
+      "Le Bosco protège son équipage et utilise sa force pour surmonter les obstacles.",
   },
   {
-    id: 'bretteur',
+    id: "bretteur",
     order: 3,
-    name: 'Bretteur',
-    subtitle: 'Maître du duel',
+    name: "Bretteur",
+    subtitle: "Maître du duel",
     description:
-      'Le Bretteur manie son arme avec précision, courage et élégance.',
+      "Le Bretteur manie son arme avec précision, courage et élégance.",
   },
   {
-    id: 'chasseur-de-tresors',
+    id: "chasseur-de-tresors",
     order: 4,
-    name: 'Chasseur de Trésors',
-    subtitle: 'Déchiffreur des secrets anciens',
+    name: "Chasseur de Trésors",
+    subtitle: "Déchiffreur des secrets anciens",
     description:
-      'Le Chasseur de Trésors découvre les indices, déchiffre les cartes et retrouve les objets oubliés.',
+      "Le Chasseur de Trésors découvre les indices, déchiffre les cartes et retrouve les objets oubliés.",
   },
   {
-    id: 'eclaireur',
+    id: "eclaireur",
     order: 5,
-    name: 'Éclaireur',
-    subtitle: 'Les yeux de la Confrérie',
+    name: "Éclaireur",
+    subtitle: "Les yeux de la Confrérie",
     description:
-      'L'Éclaireur observe les environs, repère les dangers et guide ses compagnons.',
+      "L'Éclaireur observe les environs, repère les dangers et guide ses compagnons.",
   },
   {
-    id: 'maitre-des-marees',
+    id: "maitre-des-marees",
     order: 6,
-    name: 'Maître des Marées',
-    subtitle: 'Gardien des courants',
+    name: "Maître des Marées",
+    subtitle: "Gardien des courants",
     description:
-      'Le Maître des Marées comprend les océans, les vents et les courants.',
+      "Le Maître des Marées comprend les océans, les vents et les courants.",
   },
   {
-    id: 'medecin-de-bord',
+    id: "medecin-de-bord",
     order: 7,
-    name: 'Médecin de Bord',
-    subtitle: 'Protecteur des aventuriers',
+    name: "Médecin de Bord",
+    subtitle: "Protecteur des aventuriers",
     description:
-      'Le Médecin de Bord soigne les blessures et veille sur la santé de l'équipage.',
+      "Le Médecin de Bord soigne les blessures et veille sur la santé de l'équipage.",
   },
   {
-    id: 'messager',
+    id: "messager",
     order: 8,
-    name: 'Messager',
-    subtitle: 'Porteur des nouvelles',
+    name: "Messager",
+    subtitle: "Porteur des nouvelles",
     description:
-      'Le Messager transporte les messages importants entre les membres de la Confrérie.',
+      "Le Messager transporte les messages importants entre les membres de la Confrérie.",
   },
   {
-    id: 'navigateur',
+    id: "navigateur",
     order: 9,
-    name: 'Navigateur',
-    subtitle: 'Guide des mers inconnues',
+    name: "Navigateur",
+    subtitle: "Guide des mers inconnues",
     description:
-      'Le Navigateur utilise les cartes, les étoiles et la boussole pour guider l'équipage.',
+      "Le Navigateur utilise les cartes, les étoiles et la boussole pour guider l'équipage.",
   },
   {
-    id: 'tireur-elite',
+    id: "tireur-elite",
     order: 10,
     name: "Tireur d'Élite",
-    subtitle: 'Maître de la précision',
+    subtitle: "Maître de la précision",
     description:
-      'Le Tireur d'Élite utilise son calme, son observation et sa précision.',
+      "Le Tireur d'Élite utilise son calme, son observation et sa précision.",
   },
 ];
 
