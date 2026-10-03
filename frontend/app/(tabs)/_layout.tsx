@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,32 +8,54 @@ import { colors, fonts } from '@/src/theme';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-// Icône d'onglet : pastille dorée derrière l'icône de l'onglet actif
+// Icône d'onglet : pastille dorée derrière l'icône de l'onglet actif.
+// Certains onglets utilisent une vignette tirée de leurs illustrations.
 function TabIcon({
   name,
+  image,
   focused,
   color,
   size,
 }: {
   name: IconName;
+  image?: { source: ImageSourcePropType; ratio: number };
   focused: boolean;
   color: string;
   size: number;
 }) {
   return (
     <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <MaterialCommunityIcons name={name} size={size} color={color} />
+      {image ? (
+        <Image
+          source={image.source}
+          style={[
+            styles.iconImage,
+            focused && styles.iconImageActive,
+            { height: size + 4, width: (size + 4) * image.ratio },
+          ]}
+        />
+      ) : (
+        <MaterialCommunityIcons name={name} size={size} color={color} />
+      )}
     </View>
   );
 }
 
-const TABS: { name: string; title: string; headerTitle: string; icon: IconName }[] = [
+const TABS: {
+  name: string;
+  title: string;
+  headerTitle: string;
+  icon: IconName;
+  image?: { source: ImageSourcePropType; ratio: number };
+}[] = [
   { name: 'classes', title: 'Classes', headerTitle: 'Classes des aventuriers', icon: 'sword-cross' },
   { name: 'journal', title: 'Journal', headerTitle: 'Journal de bord', icon: 'book-open-page-variant' },
   { name: 'monde', title: 'Monde', headerTitle: 'Le monde des Héritiers', icon: 'compass-rose' },
-  { name: 'passeport', title: 'Passeport', headerTitle: 'Passeport des Héritiers', icon: 'passport' },
+  { name: 'passeport', title: 'Passeport', headerTitle: 'Passeport des Héritiers', icon: 'passport',
+    image: { source: require('@/assets/images/onglets/passeport.png'), ratio: 68 / 96 } },
   { name: 'pnj', title: 'PNJ', headerTitle: 'Personnages', icon: 'account-group' },
-  { name: 'quetes', title: 'Quêtes', headerTitle: 'Quêtes de la Confrérie', icon: 'map-marker-path' },
+  { name: 'quetes', title: 'Quêtes', headerTitle: 'Quêtes de la Confrérie', icon: 'map-marker-path',
+    image: { source: require('@/assets/images/onglets/quetes.png'), ratio: 1 } },
 ];
 
 export default function TabsLayout() {
@@ -83,7 +105,13 @@ export default function TabsLayout() {
             title: tab.title,
             headerTitle: tab.headerTitle,
             tabBarIcon: ({ focused, color }) => (
-              <TabIcon name={tab.icon} focused={focused} color={color} size={iconSize} />
+              <TabIcon
+                name={tab.icon}
+                image={tab.image}
+                focused={focused}
+                color={color}
+                size={iconSize}
+              />
             ),
           }}
         />
@@ -102,5 +130,15 @@ const styles = StyleSheet.create({
   },
   iconWrapActive: {
     backgroundColor: 'rgba(198, 156, 74, 0.18)',
+  },
+  iconImage: {
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#5A4636',
+    opacity: 0.75,
+  },
+  iconImageActive: {
+    borderColor: colors.brandPrimary,
+    opacity: 1,
   },
 });
