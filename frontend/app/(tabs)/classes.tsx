@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Modal,
   Alert,
   useWindowDimensions,
 } from 'react-native';
@@ -150,13 +149,20 @@ export default function ClassesScreen() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
   const { width } = useWindowDimensions();
-  const isWideScreen = width >= 800;
+  const isNarrow = width < 600;
 
   useEffect(() => {
     fetchClasses()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setItems(data);
+          // Le backend ne connaît pas forcément le Capitaine : on l'ajoute.
+          const merged = [
+            ...localClasses.filter(
+              (local) => !data.some((d: any) => d.name === local.name)
+            ),
+            ...data,
+          ].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          setItems(merged);
         } else {
           setItems(localClasses);
         }
@@ -172,6 +178,13 @@ export default function ClassesScreen() {
         setLoading(false);
       });
   }, []);
+
+  // Affiche directement la première classe à droite.
+  useEffect(() => {
+    if (!selected && items.length > 0) {
+      setSelected(items[0]);
+    }
+  }, [items, selected]);
 
   const open = (classe: any) => {
     Haptics.selectionAsync().catch(() => {});
@@ -222,61 +235,101 @@ export default function ClassesScreen() {
     );
   }
 
-  // Two-column layout for wide screens
-  if (isWideScreen) {
-    return (
-      <SafeAreaView style={styles.root} edges={['top']}>
-        <ScreenHeader
-          title="LES CLASSES"
-          subtitle="Les onze voies des Héritiers"
-          icon="sword-cross"
-        />
+  // Liste des classes à gauche, fiche en grand à droite
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <ScreenHeader
+        title="LES CLASSES"
+        subtitle="Les onze voies des Héritiers"
+        icon="sword-cross"
+      />
 
-        <View style={styles.twoColumnContainer}>
-          {/* Left sidebar with class list */}
-          <ScrollView
-            style={styles.leftColumn}
-            showsVerticalScrollIndicator={false}
-          >
-            {items.map((classe) => (
+      <View
+        style={[
+          styles.twoColumnContainer,
+          isNarrow && styles.twoColumnContainerNarrow,
+        ]}
+      >
+        <ScrollView
+          style={[styles.leftColumn, isNarrow && styles.leftColumnNarrow]}
+          showsVerticalScrollIndicator={false}
+        >
+          {items.map((classe) => {
+            const active = selected?.id === classe.id;
+            return (
               <Pressable
                 key={classe.id}
-                onPress={() => setSelected(classe)}
+                onPress={() => open(classe)}
                 style={({ pressed }) => [
                   styles.listItem,
-                  selected?.id === classe.id && styles.listItemActive,
+                  isNarrow && styles.listItemNarrow,
+                  active && styles.listItemActive,
                   pressed && { opacity: 0.7 },
                 ]}
+                testID={`class-card-${classe.order}`}
               >
-                <View style={styles.listItemIcon}>
-                  <Image
-                    source={classImages[classe.name]}
-                    style={styles.listItemImage}
-                    contentFit="cover"
-                  />
-                </View>
+                {!isNarrow && (
+                  <View style={styles.listItemIcon}>
+                    <Image
+                      source={classImages[classe.name]}
+                      style={styles.listItemImage}
+                      contentFit="cover"
+                      contentPosition="top"
+                    />
+                  </View>
+                )}
                 <View style={styles.listItemContent}>
-                  <Text style={styles.listItemIndex}>
+                  <Text
+                    style={[
+                      styles.listItemIndex,
+                      active && styles.listItemTextActive,
+                    ]}
+                  >
                     N°{String(classe.order).padStart(2, '0')}
                   </Text>
-                  <Text style={styles.listItemName} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.listItemName,
+                      isNarrow && styles.listItemNameNarrow,
+                      active && styles.listItemTextActive,
+                    ]}
+                    numberOfLines={2}
+                  >
                     {classe.name}
                   </Text>
-                  <Text style={styles.listItemSub} numberOfLines={1}>
-                    {classe.subtitle}
-                  </Text>
+                  {!isNarrow && (
+                    <Text
+                      style={[
+                        styles.listItemSub,
+                        active && styles.listItemTextActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {classe.subtitle}
+                    </Text>
+                  )}
                 </View>
               </Pressable>
-            ))}
-          </ScrollView>
+            );
+          })}
+        </ScrollView>
 
-          {/* Right column with details */}
+        <ScrollView
+          style={styles.rightColumn}
+          contentContainerStyle={[
+            styles.rightColumnContent,
+            isNarrow && styles.rightColumnContentNarrow,
+          ]}
+          showsVerticalScrollIndicator={false}
+          testID="class-detail"
+        >
           {selected && (
-            <View style={styles.rightColumn}>
+            <>
               <Image
                 source={classImages[selected.name]}
                 style={styles.detailImage}
                 contentFit="contain"
+                transition={200}
               />
 
               <View style={styles.detailActions}>
@@ -326,148 +379,10 @@ export default function ClassesScreen() {
                 <View style={styles.divider} />
                 <Text style={styles.detailDesc}>{selected.description}</Text>
               </View>
-            </View>
+            </>
           )}
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Grid layout for mobile screens (original)
-  return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      <ScreenHeader
-        title="LES CLASSES"
-        subtitle="Les onze voies des Héritiers"
-        icon="sword-cross"
-      />
-
-      <ScrollView
-        contentContainerStyle={styles.grid}
-        showsVerticalScrollIndicator={false}
-      >
-        {items.map((classe) => (
-          <Pressable
-            key={classe.id}
-            onPress={() => open(classe)}
-            style={({ pressed }) => [
-              styles.card,
-              pressed && { opacity: 0.85 },
-            ]}
-            testID={`class-card-${classe.order}`}
-          >
-            <Image
-              source={classImages[classe.name]}
-              style={styles.cardImg}
-              contentFit="cover"
-              transition={200}
-            />
-
-            <View style={styles.cardFooter}>
-              <Text style={styles.cardIndex}>
-                N°{String(classe.order).padStart(2, '0')}
-              </Text>
-
-              <Text style={styles.cardName} numberOfLines={1}>
-                {classe.name}
-              </Text>
-
-              <Text style={styles.cardSub} numberOfLines={1}>
-                {classe.subtitle}
-              </Text>
-
-              <View style={styles.cardActions}>
-                <Pressable
-                  style={[styles.actionBtn, styles.previewBtn]}
-                  onPress={(event) => {
-                    event.stopPropagation();
-                    open(classe);
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="eye-outline"
-                    size={14}
-                    color={colors.brandPrimary}
-                  />
-                  <Text style={styles.actionText}>Aperçu</Text>
-                </Pressable>
-
-                <Pressable
-                  style={[styles.actionBtn, styles.downloadBtn]}
-                  onPress={(event) => {
-                    event.stopPropagation();
-                    handleDownload(classe);
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="download-outline"
-                    size={14}
-                    color={colors.onSurface}
-                  />
-                  <Text style={styles.actionText}>Télécharger</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
-
-      <Modal
-        visible={selected !== null}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setSelected(null)}
-      >
-        <View style={styles.modalRoot}>
-          {selected && (
-            <View
-              style={styles.modalCard}
-              testID="class-detail-modal"
-            >
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <Image
-                  source={classImages[selected.name]}
-                  style={styles.modalImg}
-                  contentFit="contain"
-                />
-
-                <View style={styles.modalBody}>
-                  <Text style={styles.modalIndex}>
-                    CLASSE N°
-                    {String(selected.order).padStart(2, '0')}
-                  </Text>
-
-                  <Text style={styles.modalTitle}>
-                    {selected.name}
-                  </Text>
-
-                  <Text style={styles.modalSub}>
-                    {selected.subtitle}
-                  </Text>
-
-                  <View style={styles.rule} />
-
-                  <Text style={styles.modalDesc}>
-                    {selected.description}
-                  </Text>
-                </View>
-              </ScrollView>
-
-              <Pressable
-                onPress={() => setSelected(null)}
-                style={styles.closeBtn}
-                testID="class-detail-close"
-              >
-                <MaterialCommunityIcons
-                  name="close"
-                  size={22}
-                  color={colors.brandPrimary}
-                />
-              </Pressable>
-            </View>
-          )}
-        </View>
-      </Modal>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -486,8 +401,14 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
 
+  twoColumnContainerNarrow: {
+    gap: spacing.sm,
+    padding: spacing.sm,
+  },
+
   leftColumn: {
-    flex: 0.35,
+    width: 280,
+    flexGrow: 0,
     backgroundColor: colors.surfaceSecondary,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -502,8 +423,21 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
 
+  leftColumnNarrow: {
+    width: 110,
+  },
+
+  listItemNarrow: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+
   listItemActive: {
     backgroundColor: colors.brandPrimary,
+  },
+
+  listItemTextActive: {
+    color: '#fff',
   },
 
   listItemIcon: {
@@ -537,6 +471,10 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
 
+  listItemNameNarrow: {
+    fontSize: 12,
+  },
+
   listItemSub: {
     fontSize: 10,
     color: colors.onSurfaceSecondary,
@@ -544,23 +482,33 @@ const styles = StyleSheet.create({
   },
 
   rightColumn: {
-    flex: 0.65,
+    flex: 1,
     backgroundColor: colors.surfaceSecondary,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.borderStrong,
-    padding: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
 
+  rightColumnContent: {
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
+
+  rightColumnContentNarrow: {
+    padding: spacing.sm,
+  },
+
+  // Les fiches font 1024 x 1536 : on garde ce ratio pour l'afficher en grand
   detailImage: {
     width: '100%',
-    height: '60%',
+    maxWidth: 900,
+    aspectRatio: 1024 / 1536,
     marginBottom: spacing.md,
   },
 
   detailActions: {
+    width: '100%',
+    maxWidth: 900,
     flexDirection: 'row',
     gap: spacing.md,
     marginBottom: spacing.md,
@@ -592,6 +540,7 @@ const styles = StyleSheet.create({
 
   detailInfo: {
     width: '100%',
+    maxWidth: 900,
   },
 
   detailIndex: {
@@ -627,154 +576,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Grid layout styles (mobile)
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: spacing.lg,
-    rowGap: spacing.md,
-    columnGap: spacing.md,
-    paddingBottom: spacing.xxxl,
-  },
-
-  card: {
-    flexBasis: '47%',
-    flexGrow: 0,
-    backgroundColor: colors.surfaceSecondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    overflow: 'hidden',
-  },
-
-  cardImg: {
-    width: '100%',
-    aspectRatio: 3 / 4,
-    backgroundColor: colors.surfaceTertiary,
-  },
-
-  cardFooter: {
-    padding: spacing.md,
-  },
-
-  cardIndex: {
-    fontFamily: fonts.text,
-    fontSize: 10,
-    color: colors.brandPrimary,
-    letterSpacing: 2,
-    marginBottom: 2,
-  },
-
-  cardName: {
-    fontFamily: fonts.display,
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.onSurface,
-  },
-
-  cardSub: {
-    ...type.small,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-
-  cardActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-
-  previewBtn: {
-    backgroundColor: colors.surface,
-    borderColor: colors.brandPrimary,
-  },
-
-  downloadBtn: {
-    backgroundColor: colors.brandPrimary,
-    borderColor: colors.brandPrimary,
-  },
-
-  actionText: {
-    fontFamily: fonts.text,
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.onSurface,
-  },
-
-  modalRoot: {
-    flex: 1,
-    backgroundColor: colors.backdrop,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-
-  modalCard: {
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '90%',
-    backgroundColor: colors.surfaceSecondary,
-    borderRadius: radius.lg,
-    borderWidth: 2,
-    borderColor: colors.brandPrimary,
-    overflow: 'hidden',
-  },
-
-  modalImg: {
-    width: '100%',
-    aspectRatio: 2 / 3,
-    backgroundColor: colors.surface,
-  },
-
-  modalBody: {
-    padding: spacing.lg,
-  },
-
-  modalIndex: {
-    fontFamily: fonts.text,
-    fontSize: 11,
-    color: colors.brandPrimary,
-    letterSpacing: 3,
-  },
-
-  modalTitle: {
-    fontFamily: fonts.display,
-    fontSize: 26,
-    fontWeight: '700',
-    color: colors.onSurface,
-    marginTop: 4,
-  },
-
-  modalSub: {
-    ...type.body,
-    fontStyle: 'italic',
-    color: colors.brandPrimary,
-    marginTop: 4,
-  },
-
-  rule: {
-    height: 1,
-    backgroundColor: colors.brandTertiary,
-    marginVertical: spacing.md,
-    opacity: 0.6,
-  },
-
-  modalDesc: {
-    ...type.body,
-  },
-
-  closeBtn: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(22,19,17,0.85)',
-    borderWidth: 1,
-    borderColor: colors.brandPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });
