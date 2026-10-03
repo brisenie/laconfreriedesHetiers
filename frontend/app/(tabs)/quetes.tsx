@@ -1,91 +1,166 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import {
+  ImageSourcePropType,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  Text,
+  View,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
-import { colors, spacing } from '@/src/theme';
+import { colors, fonts, radius, spacing } from '@/src/theme';
 import ScreenHeader from '@/src/components/ScreenHeader';
+import ImageViewer from '@/src/components/ImageViewer';
 
 const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Forge_des_Anciens.png');
 
+const TOTAL_QUESTS = 10;
+
+type Quest = {
+  number: number;
+  title: string;
+  status: string;
+  image: ImageSourcePropType;
+  // Centre du médaillon sur la carte (fractions de la largeur / hauteur)
+  x: number;
+  y: number;
+};
+
+const QUESTS: Quest[] = [
+  {
+    number: 1,
+    title: 'Chasse aux trésors 2026',
+    status: 'Complétée',
+    image: COMPLETED_QUEST_IMAGE,
+    x: 0.179,
+    y: 0.603,
+  },
+  {
+    number: 2,
+    title: 'Le message des anciens et la lettre du capitaine',
+    status: 'Découverte',
+    image: ANCIENT_MESSAGE_IMAGE,
+    x: 0.264,
+    y: 0.54,
+  },
+  {
+    number: 3,
+    title: 'La forge des Anciens',
+    status: 'Découverte',
+    image: FORGERON_EXPLAINED_IMAGE,
+    x: 0.354,
+    y: 0.466,
+  },
+];
+
+const MEDALLION_SIZE = 0.08; // diamètre de l'anneau, en fraction de la largeur de la carte
+
 export default function QuetesScreen() {
-  const [showDetail, setShowDetail] = useState(false);
-  const [showLabel, setShowLabel] = useState(false);
-  const [showAncientMessageLabel, setShowAncientMessageLabel] = useState(false);
-  const [showForgeronLabel, setShowForgeronLabel] = useState(false);
-  const [detailImage, setDetailImage] = useState<any>(null);
+  const [opened, setOpened] = useState<Quest | null>(null);
+  const [mapWidth, setMapWidth] = useState(0);
+  // Sur grand écran, le registre se place à droite de la carte
+  const { width } = useWindowDimensions();
+  const isWide = width >= 900;
 
-  const openDetail = (image: any) => {
-    setShowLabel(true);
-    setDetailImage(image);
-    setShowDetail(true);
+  const open = (quest: Quest) => {
+    Haptics.selectionAsync().catch(() => {});
+    setOpened(quest);
   };
 
-  const closeDetail = () => {
-    setShowDetail(false);
-    setDetailImage(null);
-  };
+  const ringSize = mapWidth * MEDALLION_SIZE;
 
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="quetes-screen">
       <ScreenHeader title="LES QUÊTES" subtitle="Contrats de la Confrérie" icon="script-text-outline" />
 
-      <View style={styles.imageWrap}>
-        <View style={styles.mapFrame}>
+      <ScrollView
+        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[styles.mapFrame, isWide && styles.mapFrameWide]}
+          onLayout={(event) => setMapWidth(event.nativeEvent.layout.width)}
+        >
           <Image source={MAIN_QUESTS_IMAGE} style={styles.image} contentFit="contain" />
 
-          {showLabel ? <Text style={styles.questMarkerLabel}>chasse 2026 complété</Text> : null}
-
-          <Pressable
-            accessibilityLabel="Ouvrir la chasse aux trésors 2026"
-            onPress={() => openDetail(COMPLETED_QUEST_IMAGE)}
-            style={styles.questMarker}
-          >
-            <Text style={styles.questMarkerText}> </Text>
-          </Pressable>
-
-          {showAncientMessageLabel ? <Text style={styles.questMarkerSecondLabel}>Le message des anciens et la lettre du capitaine</Text> : null}
-
-          <Pressable
-            accessibilityLabel="Ouvrir le message des anciens"
-            onPress={() => {
-              if (!showAncientMessageLabel) {
-                setShowAncientMessageLabel(true);
-              }
-              openDetail(ANCIENT_MESSAGE_IMAGE);
-            }}
-            style={styles.questMarkerSecond}
-          >
-            <Text style={styles.questMarkerText}> </Text>
-          </Pressable>
-
-          {showForgeronLabel ? <Text style={styles.questMarkerForgeronLabel}>LA forge des Anciens</Text> : null}
-
-          <Pressable
-            accessibilityLabel="Ouvrir la quête du forgeron expliquée"
-            onPress={() => {
-              if (!showForgeronLabel) {
-                setShowForgeronLabel(true);
-              }
-              openDetail(FORGERON_EXPLAINED_IMAGE);
-            }}
-            style={styles.questMarkerForgeron}
-          >
-            <Text style={styles.questMarkerText}> </Text>
-          </Pressable>
+          {/* Anneau doré sur les médaillons des quêtes disponibles */}
+          {mapWidth > 0 &&
+            QUESTS.map((quest) => (
+              <Pressable
+                key={quest.number}
+                accessibilityLabel={`Ouvrir la quête ${quest.number} : ${quest.title}`}
+                onPress={() => open(quest)}
+                testID={`quest-marker-${quest.number}`}
+                style={[
+                  styles.ring,
+                  {
+                    width: ringSize,
+                    height: ringSize,
+                    borderRadius: ringSize / 2,
+                    left: `${quest.x * 100}%`,
+                    top: `${quest.y * 100}%`,
+                    transform: [
+                      { translateX: -ringSize / 2 },
+                      { translateY: -ringSize / 2 },
+                    ],
+                  },
+                ]}
+              />
+            ))}
         </View>
-      </View>
 
-      {showDetail && detailImage ? (
-        <Pressable style={styles.overlay} onPress={closeDetail}>
-          <Pressable style={styles.detailCard} onPress={closeDetail}>
-            <Image source={detailImage} style={styles.detailImage} contentFit="contain" />
-          </Pressable>
-        </Pressable>
-      ) : null}
+        {/* Registre des quêtes, lisible sur mobile */}
+        <View style={[styles.register, isWide && styles.registerWide]}>
+          <Text style={styles.registerTitle}>REGISTRE DES QUÊTES</Text>
+          <Text style={styles.registerSub}>
+            {QUESTS.length} quêtes sur {TOTAL_QUESTS} révélées
+          </Text>
+
+          {QUESTS.map((quest) => (
+            <Pressable
+              key={quest.number}
+              onPress={() => open(quest)}
+              testID={`quest-row-${quest.number}`}
+              style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
+            >
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{quest.number}</Text>
+              </View>
+              <View style={styles.rowBody}>
+                <Text style={styles.rowTitle}>{quest.title}</Text>
+                <Text style={styles.rowStatus}>{quest.status}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={22} color={colors.brandPrimary} />
+            </Pressable>
+          ))}
+
+          <View style={[styles.row, styles.rowLocked]}>
+            <View style={[styles.badge, styles.badgeLocked]}>
+              <MaterialCommunityIcons name="lock" size={14} color="#9C8A70" />
+            </View>
+            <View style={styles.rowBody}>
+              <Text style={[styles.rowTitle, styles.rowTitleLocked]}>
+                Quêtes {QUESTS.length + 1} à {TOTAL_QUESTS}
+              </Text>
+              <Text style={styles.rowStatusLocked}>À découvrir…</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      <ImageViewer
+        source={opened ? opened.image : null}
+        title={opened ? `Quête ${opened.number} · ${opened.title}` : undefined}
+        onClose={() => setOpened(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -95,15 +170,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
   },
-  imageWrap: {
-    flex: 1,
+  content: {
     padding: spacing.md,
-    backgroundColor: colors.surface,
+    gap: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  contentWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'center',
+  },
+  mapFrameWide: {
+    flex: 2,
+    maxWidth: 1000,
+  },
+  registerWide: {
+    flex: 1,
+    maxWidth: 420,
   },
   mapFrame: {
     position: 'relative',
     width: '100%',
+    maxWidth: 900,
+    alignSelf: 'center',
     aspectRatio: 1536 / 1024,
     borderRadius: 20,
     overflow: 'hidden',
@@ -113,134 +202,101 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 20,
-    backgroundColor: colors.surface,
   },
-  questMarker: {
+  ring: {
     position: 'absolute',
-    left: '16.1%',
-    top: '61.7%',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    borderColor: 'transparent',
-    shadowColor: 'transparent',
+    borderWidth: 3,
+    borderColor: '#F2C766',
+    backgroundColor: 'rgba(242, 199, 102, 0.12)',
+    shadowColor: '#F2C766',
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
   },
-  questMarkerSecond: {
-    position: 'absolute',
-    left: '26.4%',
-    top: '54.0%',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    borderColor: 'transparent',
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
-  },
-  questMarkerForgeron: {
-    position: 'absolute',
-    left: '35.4%',
-    top: '45.5%',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    borderColor: 'transparent',
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
-  },
-  questMarkerSecondLabel: {
-    position: 'absolute',
-    left: '26.4%',
-    top: '61.4%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#070605',
-    textAlign: 'center',
-    maxWidth: 180,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  questMarkerForgeronLabel: {
-    position: 'absolute',
-    left: '35.4%',
-    top: '53.8%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#070605',
-    textAlign: 'center',
-    maxWidth: 180,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  questMarkerLabel: {
-    position: 'absolute',
-    left: '17%',
-    top: '51%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#070605',
-    textAlign: 'center',
-    maxWidth: 150,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  questMarkerText: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#2F1A0D',
-    lineHeight: 30,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(24, 18, 14, 0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  register: {
+    width: '100%',
+    maxWidth: 900,
+    alignSelf: 'center',
+    backgroundColor: '#EAD9B5',
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.brandSecondary,
     padding: spacing.lg,
+    gap: spacing.sm,
   },
-  detailCard: {
-    width: '100%',
-    maxWidth: 520,
-    maxHeight: '90%',
-    borderRadius: 24,
-    overflow: 'visible',
-    backgroundColor: '#f4e7c5',
+  registerTitle: {
+    fontFamily: fonts.display,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: '#3B2718',
+    textAlign: 'center',
   },
-  detailImage: {
-    width: '100%',
-    height: '100%',
-    minHeight: 680,
+  registerSub: {
+    fontFamily: fonts.display,
+    fontStyle: 'italic',
+    fontSize: 13,
+    color: '#6B4E2E',
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: '#F6EBD2',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#C9A86A',
+  },
+  rowLocked: {
+    backgroundColor: 'transparent',
+    borderStyle: 'dashed',
+  },
+  badge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2C221C',
+    borderWidth: 2,
+    borderColor: colors.brandPrimary,
+  },
+  badgeLocked: {
+    backgroundColor: '#E2CFA6',
+    borderColor: '#B9A27A',
+  },
+  badgeText: {
+    fontFamily: fonts.display,
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.brandPrimary,
+  },
+  rowBody: {
+    flex: 1,
+  },
+  rowTitle: {
+    fontFamily: fonts.display,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#2A1E17',
+  },
+  rowTitleLocked: {
+    color: '#8A7456',
+  },
+  rowStatus: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: '#7A5A2E',
+    marginTop: 2,
+  },
+  rowStatusLocked: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: '#9C8A70',
+    marginTop: 2,
   },
 });
