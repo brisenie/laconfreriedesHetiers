@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -70,10 +70,19 @@ export default function JournalScreen() {
   const [pageIndex, setPageIndex] = useState(0);
   const [zoomed, setZoomed] = useState<any | null>(null);
   const pagerRef = useRef<ScrollView>(null);
-  const { width, height } = useWindowDimensions();
-  const bookWidth = Math.max(width - spacing.xl * 2, 280);
-  const pageHeight = Math.min(Math.max(height * 0.58, 420), 620);
+  const [area, setArea] = useState({ width: 0, height: 0 });
   const spreadCount = entries.length > 1 ? 2 : entries.length;
+
+  // Taille unique du journal ouvert, la même pour toutes les doubles pages
+  const pagesWidth = Math.max(
+    0,
+    Math.min(
+      area.width - spacing.md * 2 - BOOK_COVER * 2,
+      (area.height - CONTROLS_HEIGHT - BOOK_COVER * 2) * BOOK_ASPECT
+    )
+  );
+  const pagesHeight = pagesWidth / BOOK_ASPECT;
+  const bookWidth = pagesWidth;
 
   useEffect(() => {
     fetchJournal()
@@ -102,30 +111,66 @@ export default function JournalScreen() {
           <Text style={styles.emptyText}>Aucune entrée pour l’instant.</Text>
         </View>
       ) : (
-        <View style={styles.bookArea}>
-          <ScrollView
-            ref={pagerRef}
-            style={[styles.bookPager, { width: bookWidth }]}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.bookPages}
-            onMomentumScrollEnd={(event) => {
-              setPageIndex(Math.round(event.nativeEvent.contentOffset.x / bookWidth));
-            }}
-          >
-            {entries.map((entry, index) => {
-              if (index === 0) {
-                return <BookSpread key={`${entry.id}-spread`} width={bookWidth} height={pageHeight} image={FIRST_JOURNAL_IMAGE} testID={`journal-entry-${entry.id}`} />;
-              }
+        <View
+          style={styles.bookArea}
+          onLayout={(event) => {
+            const { width: w, height: h } = event.nativeEvent.layout;
+            setArea({ width: w, height: h });
+          }}
+        >
+          {pagesWidth > 0 && (
+            <View style={styles.bookCover}>
+              <ScrollView
+                ref={pagerRef}
+                style={{ width: pagesWidth, height: pagesHeight }}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(event) => {
+                  setPageIndex(Math.round(event.nativeEvent.contentOffset.x / bookWidth));
+                }}
+              >
+                {entries.map((entry, index) => {
+                  if (index === 0) {
+                    return (
+                      <BookSpread
+                        key={`${entry.id}-spread`}
+                        width={pagesWidth}
+                        height={pagesHeight}
+                        image={FIRST_JOURNAL_IMAGE}
+                        onOpen={setZoomed}
+                        testID={`journal-entry-${entry.id}`}
+                      />
+                    );
+                  }
 
-              if (index === 1) {
-                return <BookImagesSpread key={`${entry.id}-spread`} width={bookWidth} height={pageHeight} onOpen={setZoomed} testID="journal-images-spread" />;
-              }
+                  if (index === 1) {
+                    return (
+                      <BookImagesSpread
+                        key={`${entry.id}-spread`}
+                        width={pagesWidth}
+                        height={pagesHeight}
+                        onOpen={setZoomed}
+                        testID="journal-images-spread"
+                      />
+                    );
+                  }
 
-              return null;
-            })}
-          </ScrollView>
+                  return null;
+                })}
+              </ScrollView>
+
+              {/* Pliure du journal, toujours au même endroit */}
+              <View
+                pointerEvents="none"
+                style={[styles.fold, { left: BOOK_COVER + pagesWidth / 2 - 12, top: BOOK_COVER, height: pagesHeight }]}
+              >
+                {[0.1, 0.25, 0.5, 0.25, 0.1].map((opacity, index) => (
+                  <View key={index} style={[styles.foldShade, { opacity }]} />
+                ))}
+              </View>
+            </View>
+          )}
 
           <View style={styles.bookControls}>
             <Pressable
@@ -162,18 +207,34 @@ export default function JournalScreen() {
   );
 }
 
-function BookSpread({ width, height, image, testID }: { width: number; height: number; image: any; testID: string }) {
+// Proportions du journal ouvert (double page) : celles de la chasse 2026
+const BOOK_ASPECT = 1536 / 1024;
+const BOOK_COVER = 10; // épaisseur de la reliure
+const CONTROLS_HEIGHT = 80; // flèches et numéro de page sous le journal
+
+// Double page faite d'une seule image en largeur
+function BookSpread({
+  width,
+  height,
+  image,
+  onOpen,
+  testID,
+}: {
+  width: number;
+  height: number;
+  image: any;
+  onOpen: (image: any) => void;
+  testID: string;
+}) {
   return (
-    <View style={[styles.spread, { width, height }]} testID={testID}>
-      <Image source={image} style={[styles.pageImage, { width, height }]} contentFit="contain" />
-      <View pointerEvents="none" style={[styles.spine, { height }]} />
-    </View>
+    <Pressable style={{ width, height }} onPress={() => onOpen(image)} testID={testID}>
+      <Image source={image} style={{ width, height }} contentFit="cover" />
+      <ZoomHint />
+    </Pressable>
   );
 }
 
-// Ratio largeur / hauteur des pages du journal (1024 x 1536)
-const JOURNAL_PAGE_ASPECT = 1024 / 1536;
-
+// Double page faite de deux pages verticales, posées sur le parchemin
 function BookImagesSpread({
   width,
   height,
@@ -185,51 +246,44 @@ function BookImagesSpread({
   onOpen: (image: any) => void;
   testID: string;
 }) {
-  // Les deux pages sont affichées en entier, côte à côte, sans être rognées
-  const pageWidth = Math.min(width / 2, height * JOURNAL_PAGE_ASPECT);
-  const pageHeight = pageWidth / JOURNAL_PAGE_ASPECT;
-
   return (
-    <View style={[styles.spread, styles.spreadCentered, { width, height }]} testID={testID}>
-      <View style={styles.openBook}>
-        {[SECOND_JOURNAL_IMAGE, LAST_JOURNAL_IMAGE].map((image, index) => (
-          <Pressable
-            key={index}
-            onPress={() => onOpen(image)}
-            testID={`journal-page-${index}`}
-          >
-            <Image source={image} style={{ width: pageWidth, height: pageHeight }} contentFit="cover" />
-            <ZoomHint />
-          </Pressable>
-        ))}
-
-        {/* Pliure du livre entre les deux pages */}
-        <View pointerEvents="none" style={[styles.fold, { left: pageWidth - 12 }]}>
-          {[0.12, 0.3, 0.55, 0.3, 0.12].map((opacity, index) => (
-            <View key={index} style={[styles.foldShade, { opacity }]} />
-          ))}
-        </View>
-      </View>
+    <View style={[styles.spread, { width, height }]} testID={testID}>
+      {[SECOND_JOURNAL_IMAGE, LAST_JOURNAL_IMAGE].map((image, index) => (
+        <Pressable
+          key={index}
+          onPress={() => onOpen(image)}
+          style={[styles.parchmentPage, { width: width / 2, height }]}
+          testID={`journal-page-${index}`}
+        >
+          <Image source={image} style={styles.parchmentImage} contentFit="contain" />
+          <ZoomHint />
+        </Pressable>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
-  bookArea: { flex: 1, justifyContent: 'center', paddingBottom: spacing.lg },
-  bookPager: { alignSelf: 'center' },
-  bookPages: { alignItems: 'center' },
-  spread: { flexDirection: 'row', position: 'relative' },
-  spreadCentered: { alignItems: 'center', justifyContent: 'center' },
-  openBook: {
-    flexDirection: 'row',
-    position: 'relative',
+  bookArea: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: spacing.sm },
+  bookCover: {
+    padding: BOOK_COVER,
+    borderRadius: 8,
+    backgroundColor: '#4A2E1A',
+    borderWidth: 2,
+    borderColor: colors.brandSecondary,
     shadowColor: '#000',
     shadowOpacity: 0.6,
-    shadowRadius: 10,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
   },
-  fold: { position: 'absolute', top: 0, bottom: 0, width: 24, flexDirection: 'row' },
+  parchmentPage: {
+    backgroundColor: '#D9C39A',
+    padding: 4,
+  },
+  parchmentImage: { flex: 1 },
+  spread: { flexDirection: 'row', position: 'relative' },
+  fold: { position: 'absolute', width: 24, flexDirection: 'row' },
   foldShade: { flex: 1, backgroundColor: '#000' },
   page: {
     overflow: 'hidden',
@@ -243,9 +297,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   seamlessPage: { borderWidth: 0 },
-  pageImage: { position: 'absolute', top: 0 },
   textPage: { padding: spacing.lg },
-  spine: { position: 'absolute', left: '50%', width: 2, backgroundColor: 'rgba(67, 35, 19, 0.5)' },
   bookControls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xl, paddingTop: spacing.lg },
   pageButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.brandPrimary },
   pageButtonDisabled: { opacity: 0.35 },
