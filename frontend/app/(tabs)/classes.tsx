@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderWeak,
+    borderBottomColor: colors.border,
     gap: spacing.sm,
   },
 
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
 
   listItemSub: {
     fontSize: 10,
-    color: colors.onSurfaceVariant,
+    color: colors.onSurfaceSecondary,
     fontStyle: 'italic',
   },
 
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: colors.borderWeak,
+    backgroundColor: colors.border,
     marginVertical: spacing.sm,
   },
 

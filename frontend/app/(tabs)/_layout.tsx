@@ -1,5 +1,6 @@
 import React from 'react';
-import { Tabs, useWindowDimensions } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
+import { Tabs } from 'expo-router';
 
 export default function TabsLayout() {
   const { width } = useWindowDimensions();

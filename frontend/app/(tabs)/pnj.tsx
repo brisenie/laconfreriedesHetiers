@@ -26,36 +26,6 @@ type Personnage = {
 
 const allPersonnages: Personnage[] = [
   {
-    identifiant:
-cat > app/\(tabs\)/pnj.tsx << 'EOF'
-import React, { useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  ImageSourcePropType,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { storage } from '@/src/utils/storage';
-import { useFocusEffect } from 'expo-router';
-import { isAcceptedPassword } from '@/src/utils/password';
-
-type Personnage = {
-  identifiant: string;
-  nom: string;
-  sousTitre: string;
-  description: string;
-  image: ImageSourcePropType;
-};
-
-const allPersonnages: Personnage[] = [
-  {
     identifiant: 'capitaine',
     nom: 'Capitaine A.P. Fraser',
     sousTitre: 'Le capitaine maraîcher',
@@ -181,7 +151,7 @@ export default function PnjScreen() {
       return () => {
         active = false;
       };
-    }, []
+    }, [])
   );
 
   const unlockPersonnage = async (identifiant: string) => {
