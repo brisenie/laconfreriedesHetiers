@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, radius, type, fonts } from '@/src/theme';
 import { fetchJournal } from '@/src/api';
 import ScreenHeader from '@/src/components/ScreenHeader';
+import ImageViewer, { ZoomHint } from '@/src/components/ImageViewer';
 
 const LAST_JOURNAL_IMAGE = require('../../assets/images/journal/journal des infectés.jpg');
 const SECOND_JOURNAL_IMAGE = require('../../assets/images/journal/le message des anciens.png');
@@ -67,6 +68,7 @@ export default function JournalScreen() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageIndex, setPageIndex] = useState(0);
+  const [zoomed, setZoomed] = useState<any | null>(null);
   const pagerRef = useRef<ScrollView>(null);
   const { width, height } = useWindowDimensions();
   const bookWidth = Math.max(width - spacing.xl * 2, 280);
@@ -118,7 +120,7 @@ export default function JournalScreen() {
               }
 
               if (index === 1) {
-                return <BookImagesSpread key={`${entry.id}-spread`} width={bookWidth} height={pageHeight} testID="journal-images-spread" />;
+                return <BookImagesSpread key={`${entry.id}-spread`} width={bookWidth} height={pageHeight} onOpen={setZoomed} testID="journal-images-spread" />;
               }
 
               return null;
@@ -154,6 +156,8 @@ export default function JournalScreen() {
           </View>
         </View>
       )}
+
+      <ImageViewer source={zoomed} onClose={() => setZoomed(null)} />
     </SafeAreaView>
   );
 }
@@ -167,17 +171,44 @@ function BookSpread({ width, height, image, testID }: { width: number; height: n
   );
 }
 
-function BookImagesSpread({ width, height, testID }: { width: number; height: number; testID: string }) {
-  const pageWidth = width / 2;
-  const overlap = 32;
+// Ratio largeur / hauteur des pages du journal (1024 x 1536)
+const JOURNAL_PAGE_ASPECT = 1024 / 1536;
+
+function BookImagesSpread({
+  width,
+  height,
+  onOpen,
+  testID,
+}: {
+  width: number;
+  height: number;
+  onOpen: (image: any) => void;
+  testID: string;
+}) {
+  // Les deux pages sont affichées en entier, côte à côte, sans être rognées
+  const pageWidth = Math.min(width / 2, height * JOURNAL_PAGE_ASPECT);
+  const pageHeight = pageWidth / JOURNAL_PAGE_ASPECT;
 
   return (
-    <View style={[styles.spread, { width, height }]} testID={testID}>
-      <View style={{ position: 'absolute', left: 0, width: pageWidth, height, overflow: 'hidden' }}>
-        <Image source={SECOND_JOURNAL_IMAGE} style={{ width: pageWidth + overlap, height }} contentFit="contain" />
-      </View>
-      <View style={{ position: 'absolute', left: pageWidth, width: pageWidth, height, overflow: 'hidden' }}>
-        <Image source={LAST_JOURNAL_IMAGE} style={{ position: 'absolute', left: -overlap, width: pageWidth + overlap, height }} contentFit="contain" />
+    <View style={[styles.spread, styles.spreadCentered, { width, height }]} testID={testID}>
+      <View style={styles.openBook}>
+        {[SECOND_JOURNAL_IMAGE, LAST_JOURNAL_IMAGE].map((image, index) => (
+          <Pressable
+            key={index}
+            onPress={() => onOpen(image)}
+            testID={`journal-page-${index}`}
+          >
+            <Image source={image} style={{ width: pageWidth, height: pageHeight }} contentFit="cover" />
+            <ZoomHint />
+          </Pressable>
+        ))}
+
+        {/* Pliure du livre entre les deux pages */}
+        <View pointerEvents="none" style={[styles.fold, { left: pageWidth - 12 }]}>
+          {[0.12, 0.3, 0.55, 0.3, 0.12].map((opacity, index) => (
+            <View key={index} style={[styles.foldShade, { opacity }]} />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -189,6 +220,17 @@ const styles = StyleSheet.create({
   bookPager: { alignSelf: 'center' },
   bookPages: { alignItems: 'center' },
   spread: { flexDirection: 'row', position: 'relative' },
+  spreadCentered: { alignItems: 'center', justifyContent: 'center' },
+  openBook: {
+    flexDirection: 'row',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  fold: { position: 'absolute', top: 0, bottom: 0, width: 24, flexDirection: 'row' },
+  foldShade: { flex: 1, backgroundColor: '#000' },
   page: {
     overflow: 'hidden',
     backgroundColor: '#E9D7B0',
