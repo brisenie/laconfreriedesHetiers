@@ -12,6 +12,18 @@ import ImageViewer, { ZoomHint } from '@/src/components/ImageViewer';
 const LAST_JOURNAL_IMAGE = require('../../assets/images/journal/journal des infectés.jpg');
 const SECOND_JOURNAL_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 const FIRST_JOURNAL_IMAGE = require('../../assets/images/journal/chasse 2026.png');
+const FORGE_JOURNAL_IMAGE = require('../../assets/images/journal/la forge des anciens - quete completee.png');
+const FORGE_END_IMAGE = require('../../quêtes/toutes les quêtes/La_fin_de_la_quete_du_Forgeron.png');
+
+// Les doubles pages du journal, dans l'ordre. Une double page est soit une
+// seule image en largeur, soit deux pages verticales côte à côte.
+type Spread = { id: string; wide: any } | { id: string; pages: [any, any] };
+
+const SPREADS: Spread[] = [
+  { id: 'chasse-2026', wide: FIRST_JOURNAL_IMAGE },
+  { id: 'message-et-infectes', pages: [SECOND_JOURNAL_IMAGE, LAST_JOURNAL_IMAGE] },
+  { id: 'forge-des-anciens', pages: [FORGE_JOURNAL_IMAGE, FORGE_END_IMAGE] },
+];
 
 const DEFAULT_JOURNAL_ENTRIES = [
   {
@@ -71,7 +83,7 @@ export default function JournalScreen() {
   const [zoomed, setZoomed] = useState<any | null>(null);
   const pagerRef = useRef<ScrollView>(null);
   const [area, setArea] = useState({ width: 0, height: 0 });
-  const spreadCount = entries.length > 1 ? 2 : entries.length;
+  const spreadCount = SPREADS.length;
 
   // Taille unique du journal ouvert, la même pour toutes les doubles pages
   const pagesWidth = Math.max(
@@ -130,34 +142,27 @@ export default function JournalScreen() {
                   setPageIndex(Math.round(event.nativeEvent.contentOffset.x / bookWidth));
                 }}
               >
-                {entries.map((entry, index) => {
-                  if (index === 0) {
-                    return (
-                      <BookSpread
-                        key={`${entry.id}-spread`}
-                        width={pagesWidth}
-                        height={pagesHeight}
-                        image={FIRST_JOURNAL_IMAGE}
-                        onOpen={setZoomed}
-                        testID={`journal-entry-${entry.id}`}
-                      />
-                    );
-                  }
-
-                  if (index === 1) {
-                    return (
-                      <BookImagesSpread
-                        key={`${entry.id}-spread`}
-                        width={pagesWidth}
-                        height={pagesHeight}
-                        onOpen={setZoomed}
-                        testID="journal-images-spread"
-                      />
-                    );
-                  }
-
-                  return null;
-                })}
+                {SPREADS.map((spread) =>
+                  'wide' in spread ? (
+                    <BookSpread
+                      key={spread.id}
+                      width={pagesWidth}
+                      height={pagesHeight}
+                      image={spread.wide}
+                      onOpen={setZoomed}
+                      testID={`journal-spread-${spread.id}`}
+                    />
+                  ) : (
+                    <BookImagesSpread
+                      key={spread.id}
+                      width={pagesWidth}
+                      height={pagesHeight}
+                      pages={spread.pages}
+                      onOpen={setZoomed}
+                      testID={`journal-spread-${spread.id}`}
+                    />
+                  )
+                )}
               </ScrollView>
 
               {/* Pliure du journal, toujours au même endroit */}
@@ -238,22 +243,24 @@ function BookSpread({
 function BookImagesSpread({
   width,
   height,
+  pages,
   onOpen,
   testID,
 }: {
   width: number;
   height: number;
+  pages: [any, any];
   onOpen: (image: any) => void;
   testID: string;
 }) {
   return (
     <View style={[styles.spread, { width, height }]} testID={testID}>
-      {[SECOND_JOURNAL_IMAGE, LAST_JOURNAL_IMAGE].map((image, index) => (
+      {pages.map((image, index) => (
         <Pressable
           key={index}
           onPress={() => onOpen(image)}
           style={[styles.parchmentPage, { width: width / 2, height }]}
-          testID={`journal-page-${index}`}
+          testID={`${testID}-page-${index}`}
         >
           <Image source={image} style={styles.parchmentImage} contentFit="contain" />
           <ZoomHint />
