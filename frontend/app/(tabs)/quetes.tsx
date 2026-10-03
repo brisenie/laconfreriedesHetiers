@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ImageSourcePropType,
   Pressable,
@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { colors, fonts, radius, spacing } from '@/src/theme';
 import ScreenHeader from '@/src/components/ScreenHeader';
 import ImageViewer from '@/src/components/ImageViewer';
+import { storage } from '@/src/utils/storage';
 
 const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
@@ -24,11 +25,16 @@ const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Fo
 
 const TOTAL_QUESTS = 10;
 
+// Mémorise sur l'appareil les quêtes déjà ouvertes
+const seenKey = (number: number) => `quetes.vue.${number}`;
+
 type Quest = {
   number: number;
   title: string;
   status: string;
   image: ImageSourcePropType;
+  // Illustration de la quête, affichée dans le médaillon une fois ouverte
+  emblem: ImageSourcePropType;
   // Centre du médaillon sur la carte (fractions de la largeur / hauteur)
   x: number;
   y: number;
@@ -40,6 +46,7 @@ const QUESTS: Quest[] = [
     title: 'Chasse aux trésors 2026',
     status: 'Complétée',
     image: COMPLETED_QUEST_IMAGE,
+    emblem: require('../../assets/images/quetes/chasse.png'),
     x: 0.179,
     y: 0.598,
   },
@@ -48,6 +55,7 @@ const QUESTS: Quest[] = [
     title: 'Le message des anciens et la lettre du capitaine',
     status: 'Découverte',
     image: ANCIENT_MESSAGE_IMAGE,
+    emblem: require('../../assets/images/quetes/message.png'),
     x: 0.264,
     y: 0.542,
   },
@@ -56,16 +64,31 @@ const QUESTS: Quest[] = [
     title: 'La forge des Anciens',
     status: 'Découverte',
     image: FORGERON_EXPLAINED_IMAGE,
+    emblem: require('../../assets/images/quetes/forge.png'),
     x: 0.353,
     y: 0.469,
   },
 ];
 
 const MEDALLION_SIZE = 0.074; // diamètre de l'anneau, en fraction de la largeur de la carte
+const EMBLEM_SIZE = 0.05; // diamètre de l'illustration posée sur le médaillon
 
 export default function QuetesScreen() {
   const [opened, setOpened] = useState<Quest | null>(null);
   const [mapWidth, setMapWidth] = useState(0);
+  const [seen, setSeen] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    Promise.all(
+      QUESTS.map((quest) => storage.getItem(seenKey(quest.number), false))
+    ).then((values) => {
+      const loaded: Record<number, boolean> = {};
+      QUESTS.forEach((quest, index) => {
+        loaded[quest.number] = Boolean(values[index]);
+      });
+      setSeen(loaded);
+    });
+  }, []);
   // Sur grand écran, le registre se place à droite de la carte
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
@@ -73,9 +96,14 @@ export default function QuetesScreen() {
   const open = (quest: Quest) => {
     Haptics.selectionAsync().catch(() => {});
     setOpened(quest);
+    if (!seen[quest.number]) {
+      setSeen((current) => ({ ...current, [quest.number]: true }));
+      storage.setItem(seenKey(quest.number), true);
+    }
   };
 
   const ringSize = mapWidth * MEDALLION_SIZE;
+  const emblemSize = mapWidth * EMBLEM_SIZE;
 
   return (
     <SafeAreaView style={styles.root} edges={['top']} testID="quetes-screen">
@@ -113,7 +141,23 @@ export default function QuetesScreen() {
                     ],
                   },
                 ]}
-              />
+              >
+                {seen[quest.number] && (
+                  <Image
+                    source={quest.emblem}
+                    style={[
+                      styles.mapEmblem,
+                      {
+                        width: emblemSize,
+                        height: emblemSize,
+                        borderRadius: emblemSize / 2,
+                      },
+                    ]}
+                    contentFit="cover"
+                    transition={300}
+                  />
+                )}
+              </Pressable>
             ))}
         </View>
 
@@ -131,9 +175,18 @@ export default function QuetesScreen() {
               testID={`quest-row-${quest.number}`}
               style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
             >
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{quest.number}</Text>
-              </View>
+              {seen[quest.number] ? (
+                <View>
+                  <Image source={quest.emblem} style={styles.rowEmblem} contentFit="cover" />
+                  <View style={styles.rowEmblemNumber}>
+                    <Text style={styles.rowEmblemNumberText}>{quest.number}</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{quest.number}</Text>
+                </View>
+              )}
               <View style={styles.rowBody}>
                 <Text style={styles.rowTitle}>{quest.title}</Text>
                 <Text style={styles.rowStatus}>{quest.status}</Text>
@@ -205,6 +258,8 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 3,
     borderColor: '#F2C766',
     backgroundColor: 'rgba(242, 199, 102, 0.12)',
@@ -212,6 +267,36 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.9,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
+  },
+  mapEmblem: {
+    borderWidth: 1.5,
+    borderColor: '#F2C766',
+  },
+  rowEmblem: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: colors.brandPrimary,
+  },
+  rowEmblemNumber: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2C221C',
+    borderWidth: 1.5,
+    borderColor: colors.brandPrimary,
+  },
+  rowEmblemNumberText: {
+    fontFamily: fonts.display,
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.brandPrimary,
   },
   register: {
     width: '100%',
@@ -256,9 +341,9 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#2C221C',
