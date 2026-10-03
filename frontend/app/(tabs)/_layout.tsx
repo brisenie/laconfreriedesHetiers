@@ -55,7 +55,7 @@ const TABS: {
     image: { source: require('@/assets/images/onglets/passeport.png'), ratio: 68 / 96 } },
   { name: 'pnj', title: 'PNJ', headerTitle: 'Personnages', icon: 'account-group' },
   { name: 'quetes', title: 'Quêtes', headerTitle: 'Quêtes de la Confrérie', icon: 'map-marker-path',
-    image: { source: require('@/assets/images/onglets/quetes.png'), ratio: 1 } },
+    image: { source: require('@/assets/images/onglets/quetes.png'), ratio: 128 / 96 } },
 ];
 
 export default function TabsLayout() {
