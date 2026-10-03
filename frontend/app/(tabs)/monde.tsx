@@ -1,45 +1,61 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  useWindowDimensions,
-  Pressable,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-import { colors, spacing } from '@/src/theme';
+import { colors } from '@/src/theme';
 
 const UNIVERS =
   'https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/46qnx118_file_000000004cd0722fae6924f665c15167.png';
 
 const IMG_ASPECT = 1024 / 2048;
 
-const CARDS = [
-  { id: 'histoire', top: 0.315, bottom: 0.535, left: 0.045, right: 0.355 },
-  { id: 'monde', top: 0.315, bottom: 0.535, left: 0.355, right: 0.665 },
-  { id: 'pnj', top: 0.315, bottom: 0.535, left: 0.665, right: 0.955 },
-  { id: 'reliques', top: 0.545, bottom: 0.765, left: 0.045, right: 0.355 },
-  { id: 'legendes', top: 0.545, bottom: 0.765, left: 0.355, right: 0.665 },
+// Emplacements des six cartes dans l'image Univers (fractions de la largeur
+// et de la hauteur de l'image), mesurés sur l'image affichée.
+const COLS = [
+  { left: 0.044, right: 0.337 },
+  { left: 0.357, right: 0.64 },
+  { left: 0.657, right: 0.956 },
+];
+const ROWS = [
+  { top: 0.337, bottom: 0.606 },
+  { top: 0.613, bottom: 0.882 },
+];
+
+type Card = {
+  id: string;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  image?: number;
+};
+
+const CARDS: Card[] = [
+  { id: 'histoire', ...COLS[0], ...ROWS[0] },
+  { id: 'monde', ...COLS[1], ...ROWS[0] },
+  { id: 'pnj', ...COLS[2], ...ROWS[0] },
+  { id: 'reliques', ...COLS[0], ...ROWS[1] },
+  { id: 'legendes', ...COLS[1], ...ROWS[1] },
   {
     id: 'ennemis',
-    top: 0.545,
-    bottom: 0.765,
-    left: 0.665,
-    right: 0.955,
-    image: require('../../Monde/ennemis/kraken.png'),
+    ...COLS[2],
+    ...ROWS[1],
+    // Carte « Ennemis » dans le même style que les autres cartes
+    image: require('../../Monde/ennemis/carte-ennemis.png'),
   },
 ];
 
 export default function MondeScreen() {
-  const { width } = useWindowDimensions();
   const router = useRouter();
+  const [box, setBox] = useState({ width: 0, height: 0 });
 
-  const imgWidth = width;
-  const imgHeight = imgWidth / IMG_ASPECT;
+  // L'image entière tient dans l'écran, sans défilement
+  const imgHeight = Math.min(box.height, box.width / IMG_ASPECT);
+  const imgWidth = imgHeight * IMG_ASPECT;
+  const imgLeft = (box.width - imgWidth) / 2;
+  const imgTop = (box.height - imgHeight) / 2;
 
   const onCard = (id: string) => {
     Haptics.selectionAsync().catch(() => {});
@@ -61,16 +77,32 @@ export default function MondeScreen() {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={styles.root}
-      edges={['top']}
       testID="monde-screen"
+      onLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout;
+        setBox({ width, height });
+      }}
     >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={{ width: imgWidth, height: imgHeight }}>
+      {/* Fond flouté tiré de la même image, à la place de bandes noires */}
+      <Image
+        source={{ uri: UNIVERS }}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        blurRadius={30}
+      />
+
+      {imgHeight > 0 && (
+        <View
+          style={{
+            position: 'absolute',
+            left: imgLeft,
+            top: imgTop,
+            width: imgWidth,
+            height: imgHeight,
+          }}
+        >
           <Image
             source={{ uri: UNIVERS }}
             style={StyleSheet.absoluteFill}
@@ -78,52 +110,32 @@ export default function MondeScreen() {
             transition={200}
           />
 
-          {CARDS.map((c) => {
-            // Fixed, explicit pixel box for this card — computed once here
-            // instead of being left to percentage styles, so the card's
-            // own image can never influence the size of its clickable box
-            // (this is what was letting the Ennemis card grow taller than
-            // Reliques / Légendes and spill into the PNJ row above it).
-            const cardWidth = imgWidth * (c.right - c.left);
-            const cardHeight = imgHeight * (c.bottom - c.top);
-            const cardTop = imgHeight * c.top;
-            const cardLeft = imgWidth * c.left;
-
-            return (
-              <Pressable
-                key={c.id}
-                testID={`univers-card-${c.id}`}
-                onPress={() => onCard(c.id)}
-                style={{
-                  position: 'absolute',
-                  top: cardTop,
-                  left: cardLeft,
-                  width: cardWidth,
-                  height: cardHeight,
-                  overflow: 'hidden',
-                }}
-              >
-                {c.image ? (
-                  <View
-                    style={[
-                      styles.cardImageClip,
-                      { width: cardWidth, height: cardHeight },
-                    ]}
-                  >
-                    <Image
-                      source={c.image}
-                      style={{ width: cardWidth, height: cardHeight }}
-                      contentFit="fill"
-                      transition={200}
-                    />
-                  </View>
-                ) : null}
-              </Pressable>
-            );
-          })}
+          {CARDS.map((c) => (
+            <Pressable
+              key={c.id}
+              testID={`univers-card-${c.id}`}
+              onPress={() => onCard(c.id)}
+              style={{
+                position: 'absolute',
+                top: imgHeight * c.top,
+                left: imgWidth * c.left,
+                width: imgWidth * (c.right - c.left),
+                height: imgHeight * (c.bottom - c.top),
+              }}
+            >
+              {c.image ? (
+                <Image
+                  source={c.image}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="fill"
+                  transition={200}
+                />
+              ) : null}
+            </Pressable>
+          ))}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      )}
+    </View>
   );
 }
 
@@ -131,16 +143,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.surface,
-  },
-
-  content: {
-    paddingBottom: spacing.xxxl,
-  },
-
-  cardImageClip: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
     overflow: 'hidden',
   },
 });
