@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { storage } from '@/src/utils/storage';
 import { useFocusEffect } from 'expo-router';
 import { isAcceptedPassword } from '@/src/utils/password';
+import ImageViewer, { ZoomHint } from '@/src/components/ImageViewer';
 
 type Personnage = {
   identifiant: string;
@@ -127,6 +128,10 @@ export default function PnjScreen() {
   const [codeError, setCodeError] = useState(false);
   const [permanentUnlock, setPermanentUnlock] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [zoomed, setZoomed] = useState<{
+    source: ImageSourcePropType;
+    title: string;
+  } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -211,17 +216,26 @@ export default function PnjScreen() {
                   styles.carteLocked,
               ]}
             >
-              <Image
-                source={personnage.image}
-                style={[
-                  styles.image,
-                  { height: imageHeight },
-                  personnageLocked &&
-                    personnage.identifiant !== 'moumoune' &&
-                    styles.imageLocked,
-                ]}
-                resizeMode="contain"
-              />
+              <Pressable
+                disabled={personnageLocked}
+                onPress={() =>
+                  setZoomed({ source: personnage.image, title: personnage.nom })
+                }
+                testID={`pnj-image-${personnage.identifiant}`}
+              >
+                <Image
+                  source={personnage.image}
+                  style={[
+                    styles.image,
+                    { height: imageHeight },
+                    personnageLocked &&
+                      personnage.identifiant !== 'moumoune' &&
+                      styles.imageLocked,
+                  ]}
+                  resizeMode="contain"
+                />
+                {!personnageLocked && <ZoomHint />}
+              </Pressable>
 
               <View style={styles.informations}>
                 <Text
@@ -305,6 +319,12 @@ export default function PnjScreen() {
           );
         })}
       </View>
+
+      <ImageViewer
+        source={zoomed ? zoomed.source : null}
+        title={zoomed?.title}
+        onClose={() => setZoomed(null)}
+      />
     </ScrollView>
   );
 }

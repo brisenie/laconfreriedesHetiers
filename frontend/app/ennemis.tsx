@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { colors, spacing } from '@/src/theme';
+import ImageViewer, { ZoomHint } from '@/src/components/ImageViewer';
 
 const fiches = [
   {
@@ -36,6 +37,7 @@ const fiches = [
 
 export default function EnnemisScreen() {
   const router = useRouter();
+  const [zoomed, setZoomed] = useState<(typeof fiches)[number] | null>(null);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -49,13 +51,17 @@ export default function EnnemisScreen() {
         <View style={styles.list}>
           {fiches.map((fiche) => (
             <View key={fiche.id} style={styles.card}>
-              <Image
-                source={fiche.image}
-                style={[
-                  styles.image,
-                ]}
-                resizeMode="contain"
-              />
+              <Pressable
+                onPress={() => setZoomed(fiche)}
+                testID={`ennemi-image-${fiche.id}`}
+              >
+                <Image
+                  source={fiche.image}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+                <ZoomHint />
+              </Pressable>
 
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>
@@ -78,6 +84,12 @@ export default function EnnemisScreen() {
           ))}
         </View>
       </ScrollView>
+
+      <ImageViewer
+        source={zoomed ? zoomed.image : null}
+        title={zoomed?.nom}
+        onClose={() => setZoomed(null)}
+      />
     </SafeAreaView>
   );
 }
