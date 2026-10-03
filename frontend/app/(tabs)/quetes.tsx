@@ -41,7 +41,7 @@ const QUESTS: Quest[] = [
     status: 'Complétée',
     image: COMPLETED_QUEST_IMAGE,
     x: 0.179,
-    y: 0.603,
+    y: 0.598,
   },
   {
     number: 2,
@@ -49,19 +49,19 @@ const QUESTS: Quest[] = [
     status: 'Découverte',
     image: ANCIENT_MESSAGE_IMAGE,
     x: 0.264,
-    y: 0.54,
+    y: 0.542,
   },
   {
     number: 3,
     title: 'La forge des Anciens',
     status: 'Découverte',
     image: FORGERON_EXPLAINED_IMAGE,
-    x: 0.354,
-    y: 0.466,
+    x: 0.353,
+    y: 0.469,
   },
 ];
 
-const MEDALLION_SIZE = 0.08; // diamètre de l'anneau, en fraction de la largeur de la carte
+const MEDALLION_SIZE = 0.074; // diamètre de l'anneau, en fraction de la largeur de la carte
 
 export default function QuetesScreen() {
   const [opened, setOpened] = useState<Quest | null>(null);
