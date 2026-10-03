@@ -43,6 +43,8 @@ const classImages: Record<string, any> = {
   ),
 };
 
+const CLASS_IMAGE_RATIO = 1024 / 1536;
+
 const localClasses = [
   {
     id: "capitaine",
@@ -150,6 +152,21 @@ export default function ClassesScreen() {
   const [selected, setSelected] = useState<any | null>(null);
   const { width } = useWindowDimensions();
   const isNarrow = width < 600;
+  const [detailBox, setDetailBox] = useState({ width: 0, height: 0 });
+
+  // Taille de la fiche pour qu'elle tienne entièrement dans le cadre de
+  // droite, sans avoir à défiler (ratio des fiches : 1024 x 1536).
+  const detailPadding = isNarrow ? spacing.sm : spacing.lg;
+  const availableWidth = Math.max(0, detailBox.width - detailPadding * 2);
+  const availableHeight = Math.max(0, detailBox.height - detailPadding * 2);
+  const detailImageHeight = Math.min(
+    availableHeight,
+    availableWidth / CLASS_IMAGE_RATIO
+  );
+  const detailImageSize = {
+    width: detailImageHeight * CLASS_IMAGE_RATIO,
+    height: detailImageHeight,
+  };
 
   useEffect(() => {
     fetchClasses()
@@ -322,12 +339,16 @@ export default function ClassesScreen() {
           ]}
           showsVerticalScrollIndicator={false}
           testID="class-detail"
+          onLayout={(event) => {
+            const { width: w, height: h } = event.nativeEvent.layout;
+            setDetailBox({ width: w, height: h });
+          }}
         >
           {selected && (
             <>
               <Image
                 source={classImages[selected.name]}
-                style={styles.detailImage}
+                style={[styles.detailImage, detailImageSize]}
                 contentFit="contain"
                 transition={200}
               />
@@ -498,11 +519,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
 
-  // Les fiches font 1024 x 1536 : on garde ce ratio pour l'afficher en grand
   detailImage: {
-    width: '100%',
-    maxWidth: 900,
-    aspectRatio: 1024 / 1536,
     marginBottom: spacing.md,
   },
 
