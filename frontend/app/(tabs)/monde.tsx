@@ -14,13 +14,14 @@ const IMG_ASPECT = 1024 / 2048;
 // Emplacements des six cartes dans l'image Univers (fractions de la largeur
 // et de la hauteur de l'image), mesurés sur l'image affichée.
 const COLS = [
-  { left: 0.044, right: 0.337 },
-  { left: 0.357, right: 0.64 },
-  { left: 0.657, right: 0.956 },
+  { left: 0.044, right: 0.338 },
+  { left: 0.358, right: 0.64 },
+  { left: 0.66, right: 0.961 },
 ];
+// La 2e rangée de cartes est moins haute que la 1re
 const ROWS = [
-  { top: 0.337, bottom: 0.606 },
-  { top: 0.613, bottom: 0.882 },
+  { top: 0.336, bottom: 0.602 },
+  { top: 0.615, bottom: 0.857 },
 ];
 
 type Card = {
