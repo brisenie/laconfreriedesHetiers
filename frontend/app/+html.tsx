@@ -4,9 +4,10 @@ import type { PropsWithChildren } from "react";
 
 export default function Root({ children }: PropsWithChildren) {
   return (
-    <html lang="en" style={{ height: "100%" }}>
+    <html lang="fr" translate="no" style={{ height: "100%" }}>
       <head>
         <meta charSet="utf-8" />
+        <meta name="google" content="notranslate" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
           name="viewport"
