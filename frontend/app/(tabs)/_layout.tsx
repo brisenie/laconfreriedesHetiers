@@ -18,7 +18,7 @@ function TabIcon({
   size,
 }: {
   name: IconName;
-  image?: { source: ImageSourcePropType; ratio: number };
+  image?: { source: ImageSourcePropType; activeSource?: ImageSourcePropType; ratio: number };
   focused: boolean;
   color: string;
   size: number;
@@ -27,7 +27,7 @@ function TabIcon({
     <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
       {image ? (
         <Image
-          source={image.source}
+          source={focused && image.activeSource ? image.activeSource : image.source}
           style={[
             styles.iconImage,
             focused && styles.iconImageActive,
@@ -46,13 +46,18 @@ const TABS: {
   title: string;
   headerTitle: string;
   icon: IconName;
-  image?: { source: ImageSourcePropType; ratio: number };
+  image?: { source: ImageSourcePropType; activeSource?: ImageSourcePropType; ratio: number };
 }[] = [
   { name: 'classes', title: 'Classes', headerTitle: 'Classes des aventuriers', icon: 'sword-cross' },
   { name: 'journal', title: 'Journal', headerTitle: 'Journal de bord', icon: 'book-open-page-variant' },
   { name: 'monde', title: 'Monde', headerTitle: 'Le monde des Héritiers', icon: 'compass-rose' },
   { name: 'passeport', title: 'Passeport', headerTitle: 'Passeport des Héritiers', icon: 'passport',
-    image: { source: require('@/assets/images/onglets/passeport.png'), ratio: 68 / 96 } },
+    // Couverture du passeport en tons clairs (dorée quand l'onglet est actif)
+    image: {
+      source: require('@/assets/images/onglets/passeport.png'),
+      activeSource: require('@/assets/images/onglets/passeport-actif.png'),
+      ratio: 68 / 96,
+    } },
   { name: 'pnj', title: 'PNJ', headerTitle: 'Personnages', icon: 'account-group' },
   { name: 'quetes', title: 'Quêtes', headerTitle: 'Quêtes de la Confrérie', icon: 'map-marker-path',
     image: { source: require('@/assets/images/onglets/quetes.png'), ratio: 128 / 96 } },
