@@ -5,9 +5,20 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/src/theme';
-import ImageViewer from '@/src/components/ImageViewer';
+import GalleryViewer, { GallerySection } from '@/src/components/GalleryViewer';
 
-const ARSENAL_IMAGE = require('../../Monde/arsenal/arsenal-des-heritiers.png');
+const ARSENAL_SECTIONS: GallerySection[] = [
+  {
+    title: 'Les armes',
+    source: require('../../Monde/arsenal/arsenal-des-heritiers.png'),
+    aspect: 1448 / 1086,
+  },
+  {
+    title: 'Les pouvoirs des cristaux',
+    source: require('../../Monde/arsenal/pouvoirs-des-cristaux.png'),
+    aspect: 1942 / 809,
+  },
+];
 
 const UNIVERS =
   'https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/46qnx118_file_000000004cd0722fae6924f665c15167.png';
@@ -141,9 +152,10 @@ export default function MondeScreen() {
         </View>
       )}
 
-      <ImageViewer
-        source={showArsenal ? ARSENAL_IMAGE : null}
-        title="L'Arsenal des Héritiers"
+      <GalleryViewer
+        visible={showArsenal}
+        title="L'ARSENAL DES HÉRITIERS"
+        sections={ARSENAL_SECTIONS}
         onClose={() => setShowArsenal(false)}
       />
     </View>
