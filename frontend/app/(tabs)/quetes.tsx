@@ -23,7 +23,6 @@ const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Forge_des_Anciens.png');
-const FORGERON_END_IMAGE = require('../../quêtes/toutes les quêtes/La_fin_de_la_quete_du_Forgeron.png');
 
 const TOTAL_QUESTS = 10;
 
@@ -68,10 +67,6 @@ const QUESTS: Quest[] = [
     title: 'La forge des Anciens',
     status: 'Découverte',
     image: FORGERON_EXPLAINED_IMAGE,
-    pages: [
-      { source: FORGERON_EXPLAINED_IMAGE, aspect: 1093 / 1439 },
-      { source: FORGERON_END_IMAGE, aspect: 1024 / 1536 },
-    ],
     emblem: require('../../assets/images/quetes/forge.png'),
     x: 0.353,
     y: 0.469,
