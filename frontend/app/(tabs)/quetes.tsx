@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   ImageSourcePropType,
   Pressable,
   ScrollView,
@@ -19,12 +20,14 @@ import ImageViewer from '@/src/components/ImageViewer';
 import BookViewer, { BookPage } from '@/src/components/BookViewer';
 import { storage } from '@/src/utils/storage';
 
-const MAIN_QUESTS_IMAGE = require('../../quêtes/image de quêtes.png');
+// Carte des quêtes : le chemin se perd dans les « Terres inconnues »
+const MAIN_QUESTS_IMAGE = require('../../quêtes/carte des quêtes - terres inconnues.jpg');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Forge_des_Anciens.png');
 
-const TOTAL_QUESTS = 10;
+// Emplacement sur la carte du médaillon de la prochaine quête
+const NEXT_QUEST_SPOT = { x: 0.433, y: 0.533 };
 
 // Mémorise sur l'appareil les quêtes déjà ouvertes
 const seenKey = (number: number) => `quetes.vue.${number}`;
@@ -75,6 +78,46 @@ const QUESTS: Quest[] = [
 
 const MEDALLION_SIZE = 0.074; // diamètre de l'anneau, en fraction de la largeur de la carte
 const EMBLEM_SIZE = 0.05; // diamètre de l'illustration posée sur le médaillon
+
+// Médaillon « ? » de la prochaine quête : il brille doucement
+function NextQuestMarker({ size, x, y }: { size: number; x: number; y: number }) {
+  const glow = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [glow]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      testID="quest-next-marker"
+      style={[
+        styles.ring,
+        styles.nextRing,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          left: `${x * 100}%`,
+          top: `${y * 100}%`,
+          opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }),
+          transform: [
+            { translateX: -size / 2 },
+            { translateY: -size / 2 },
+            { scale: glow.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.08] }) },
+          ],
+        },
+      ]}
+    />
+  );
+}
 
 export default function QuetesScreen() {
   const [opened, setOpened] = useState<Quest | null>(null);
@@ -162,13 +205,17 @@ export default function QuetesScreen() {
                 )}
               </Pressable>
             ))}
+
+          {mapWidth > 0 && (
+            <NextQuestMarker size={ringSize} x={NEXT_QUEST_SPOT.x} y={NEXT_QUEST_SPOT.y} />
+          )}
         </View>
 
         {/* Registre des quêtes, lisible sur mobile */}
         <View style={[styles.register, isWide && styles.registerWide]}>
           <Text style={styles.registerTitle}>REGISTRE DES QUÊTES</Text>
           <Text style={styles.registerSub}>
-            {QUESTS.length} quêtes sur {TOTAL_QUESTS} révélées
+            {QUESTS.length} quêtes accomplies
           </Text>
 
           {QUESTS.map((quest) => (
@@ -204,7 +251,7 @@ export default function QuetesScreen() {
             </View>
             <View style={styles.rowBody}>
               <Text style={[styles.rowTitle, styles.rowTitleLocked]}>
-                Quêtes {QUESTS.length + 1} à {TOTAL_QUESTS}
+                Prochaine quête
               </Text>
               <Text style={styles.rowStatusLocked}>À découvrir…</Text>
             </View>
@@ -264,6 +311,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 20,
+  },
+  nextRing: {
+    borderColor: '#FFE3A0',
+    backgroundColor: 'rgba(255, 227, 160, 0.18)',
+    shadowRadius: 12,
   },
   ring: {
     position: 'absolute',
