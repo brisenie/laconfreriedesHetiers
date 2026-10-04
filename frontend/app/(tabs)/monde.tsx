@@ -5,6 +5,9 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/src/theme';
+import ImageViewer from '@/src/components/ImageViewer';
+
+const ARSENAL_IMAGE = require('../../Monde/arsenal/arsenal-des-heritiers.png');
 
 const UNIVERS =
   'https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/46qnx118_file_000000004cd0722fae6924f665c15167.png';
@@ -40,16 +43,17 @@ const CARDS: Card[] = [
   { id: 'reliques', ...COLS[0], ...ROWS[1] },
   { id: 'legendes', ...COLS[1], ...ROWS[1] },
   {
-    id: 'ennemis',
+    id: 'arsenal',
     ...COLS[2],
     ...ROWS[1],
-    // Carte « Ennemis » dans le même style que les autres cartes
-    image: require('../../Monde/ennemis/carte-ennemis.png'),
+    // Carte « Arsenal » dans le même style que les autres cartes
+    image: require('../../Monde/arsenal/carte-arsenal.png'),
   },
 ];
 
 export default function MondeScreen() {
   const router = useRouter();
+  const [showArsenal, setShowArsenal] = useState(false);
   const [box, setBox] = useState({ width: 0, height: 0 });
 
   // L'image entière tient dans l'écran, sans défilement
@@ -71,8 +75,8 @@ export default function MondeScreen() {
       return;
     }
 
-    if (id === 'ennemis') {
-      router.push('/ennemis');
+    if (id === 'arsenal') {
+      setShowArsenal(true);
       return;
     }
   };
@@ -136,6 +140,12 @@ export default function MondeScreen() {
           ))}
         </View>
       )}
+
+      <ImageViewer
+        source={showArsenal ? ARSENAL_IMAGE : null}
+        title="L'Arsenal des Héritiers"
+        onClose={() => setShowArsenal(false)}
+      />
     </View>
   );
 }
