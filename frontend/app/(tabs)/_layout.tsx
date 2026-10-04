@@ -51,13 +51,7 @@ const TABS: {
   { name: 'classes', title: 'Classes', headerTitle: 'Classes des aventuriers', icon: 'sword-cross' },
   { name: 'journal', title: 'Journal', headerTitle: 'Journal de bord', icon: 'book-open-page-variant' },
   { name: 'monde', title: 'Monde', headerTitle: 'Le monde des Héritiers', icon: 'compass-rose' },
-  { name: 'passeport', title: 'Passeport', headerTitle: 'Passeport des Héritiers', icon: 'passport',
-    // Couverture du passeport en tons clairs (dorée quand l'onglet est actif)
-    image: {
-      source: require('@/assets/images/onglets/passeport.png'),
-      activeSource: require('@/assets/images/onglets/passeport-actif.png'),
-      ratio: 68 / 96,
-    } },
+  { name: 'passeport', title: 'Passeport', headerTitle: 'Passeport des Héritiers', icon: 'passport' },
   { name: 'pnj', title: 'PNJ', headerTitle: 'Personnages', icon: 'account-group' },
   { name: 'quetes', title: 'Quêtes', headerTitle: 'Quêtes de la Confrérie', icon: 'map-marker-path',
     image: { source: require('@/assets/images/onglets/quetes.png'), ratio: 128 / 96 } },
