@@ -20,7 +20,7 @@ import ImageViewer from '@/src/components/ImageViewer';
 import BookViewer, { BookPage } from '@/src/components/BookViewer';
 import { storage } from '@/src/utils/storage';
 
-// Carte des quêtes : le chemin se perd dans les « Terres inconnues »
+// Carte des quêtes : le chemin se perd dans les « Aventures inconnues »
 const MAIN_QUESTS_IMAGE = require('../../quêtes/carte des quêtes - terres inconnues.jpg');
 const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête chasse aux trésors 2026 completée .png');
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
