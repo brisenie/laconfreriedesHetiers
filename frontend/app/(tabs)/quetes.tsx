@@ -84,65 +84,86 @@ const MAP_ASPECT = 1536 / 1024;
 const MEDALLION_SIZE = 0.074; // diamètre de l'anneau, en fraction de la largeur de la carte
 const EMBLEM_SIZE = 0.05; // diamètre de l'illustration posée sur le médaillon
 
-// Trouée dans la tempête au-dessus d'une quête dévoilée : elle s'ouvre en
-// cercle sur la quête puis s'élargit jusqu'en haut et en bas de la carte
+// Trouée dans la tempête au-dessus d'une quête dévoilée. Elle est faite de
+// cercles empilés : le bord de la tempête reste arrondi, comme un nuage.
+// Les cercles s'ouvrent depuis la quête vers le haut et le bas de la carte.
 function StormHole({
   mapWidth,
   mapHeight,
   x,
   y,
   size,
+  seed,
 }: {
   mapWidth: number;
   mapHeight: number;
   x: number;
   y: number;
   size: number;
+  seed: number;
 }) {
   const grow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(grow, { toValue: 0.25, duration: 350, useNativeDriver: false }),
-      Animated.timing(grow, { toValue: 1, duration: 900, useNativeDriver: false }),
-    ]).start();
+    Animated.timing(grow, { toValue: 1, duration: 1300, useNativeDriver: true }).start();
   }, [grow]);
 
-  const left = x * mapWidth - size / 2;
-  const startTop = y * mapHeight - size / 2;
+  const step = size * 0.5;
+  const count = Math.ceil((mapHeight + size) / step) + 1;
+  const centerY = y * mapHeight;
+  const maxDistance = Math.max(centerY, mapHeight - centerY) + size;
+
+  const circles = Array.from({ length: count }, (_, k) => {
+    const cy = -size / 2 + k * step;
+    // Petit décalage régulier de chaque cercle : bord en volutes
+    const wobble = Math.sin((k + seed) * 2.3) * size * 0.2;
+    const diameter = size * (0.9 + 0.2 * Math.sin((k + seed) * 1.7));
+    const start = Math.min(0.85, Math.abs(cy - centerY) / maxDistance);
+    return { cy, cx: x * mapWidth + wobble, diameter, start };
+  });
 
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.hole,
-        {
-          width: size,
-          borderRadius: size / 2,
-          left,
-          opacity: grow.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 1] }),
-          top: grow.interpolate({ inputRange: [0, 0.25, 1], outputRange: [startTop, startTop, -size / 2] }),
-          height: grow.interpolate({
-            inputRange: [0, 0.25, 1],
-            outputRange: [size * 0.3, size, mapHeight + size],
-          }),
-        },
-      ]}
-    >
-      <Animated.View
-        style={{
-          position: 'absolute',
-          left: -left,
-          top: grow.interpolate({ inputRange: [0, 0.25, 1], outputRange: [-startTop, -startTop, size / 2] }),
-        }}
-      >
-        <Image
-          source={CLEAR_MAP_IMAGE}
-          style={{ width: mapWidth, height: mapHeight }}
-          contentFit="cover"
-        />
-      </Animated.View>
-    </Animated.View>
+    <>
+      {circles.map((c, k) => {
+        const left = c.cx - c.diameter / 2;
+        const top = c.cy - c.diameter / 2;
+        const appear = grow.interpolate({
+          inputRange: [c.start, Math.min(1, c.start + 0.15)],
+          outputRange: [0, 1],
+          extrapolate: 'clamp',
+        });
+        return (
+          <Animated.View
+            key={k}
+            pointerEvents="none"
+            style={[
+              styles.hole,
+              {
+                left,
+                top,
+                width: c.diameter,
+                height: c.diameter,
+                borderRadius: c.diameter / 2,
+                opacity: appear,
+                transform: [{ scale: appear }],
+              },
+            ]}
+          >
+            <Image
+              source={CLEAR_MAP_IMAGE}
+              style={{
+                position: 'absolute',
+                left: -left,
+                top: -top,
+                width: mapWidth,
+                height: mapHeight,
+              }}
+              contentFit="cover"
+            />
+          </Animated.View>
+        );
+      })}
+    </>
   );
 }
 
@@ -208,6 +229,7 @@ export default function QuetesScreen() {
                 x={quest.x}
                 y={quest.y}
                 size={ringSize * 1.9}
+                seed={quest.number * 5}
               />
             ))}
 
