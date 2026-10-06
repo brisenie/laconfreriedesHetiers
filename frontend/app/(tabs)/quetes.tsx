@@ -26,12 +26,10 @@ const COMPLETED_QUEST_IMAGE = require('../../quêtes/toutes les quêtes/quête c
 const ANCIENT_MESSAGE_IMAGE = require('../../assets/images/journal/le message des anciens.png');
 const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Forge_des_Anciens.png');
 
-// Emplacement sur la carte du médaillon de la prochaine quête
-const NEXT_QUEST_SPOT = { x: 0.433, y: 0.533 };
 
-// Petit nuage qui cache une quête pas encore dévoilée (240 x 200)
-const COVER_IMAGE = require('../../assets/images/quetes/nuage.png');
-const COVER_ASPECT = 240 / 200;
+// Carte d'origine, sans la tempête : visible à travers la tempête autour
+// des quêtes dévoilées
+const CLEAR_MAP_IMAGE = require('../../quêtes/image de quêtes.png');
 
 // Mémorise sur l'appareil les quêtes déjà dévoilées
 const seenKey = (number: number) => `quetes.vue.${number}`;
@@ -82,76 +80,57 @@ const QUESTS: Quest[] = [
   },
 ];
 
+const MAP_ASPECT = 1536 / 1024;
 const MEDALLION_SIZE = 0.074; // diamètre de l'anneau, en fraction de la largeur de la carte
 const EMBLEM_SIZE = 0.05; // diamètre de l'illustration posée sur le médaillon
 
-// Médaillon « ? » de la prochaine quête : il brille doucement
-function NextQuestMarker({ size, x, y }: { size: number; x: number; y: number }) {
-  const glow = useRef(new Animated.Value(0)).current;
+// Trou dans la tempête autour d'une quête dévoilée : on y revoit la carte
+function StormHole({
+  mapWidth,
+  mapHeight,
+  x,
+  y,
+  size,
+}: {
+  mapWidth: number;
+  mapHeight: number;
+  x: number;
+  y: number;
+  size: number;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glow, { toValue: 1, duration: 1200, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0, duration: 1200, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [glow]);
+    Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true }).start();
+  }, [opacity]);
 
   return (
     <Animated.View
       pointerEvents="none"
-      testID="quest-next-marker"
       style={[
-        styles.ring,
-        styles.nextRing,
+        styles.hole,
         {
           width: size,
           height: size,
           borderRadius: size / 2,
-          left: `${x * 100}%`,
-          top: `${y * 100}%`,
-          opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }),
-          transform: [
-            { translateX: -size / 2 },
-            { translateY: -size / 2 },
-            { scale: glow.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.08] }) },
-          ],
+          left: x * mapWidth - size / 2,
+          top: y * mapHeight - size / 2,
+          opacity,
+          transform: [{ scale: opacity.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }],
         },
       ]}
-    />
-  );
-}
-
-// Nuage posé sur un médaillon ; il s'envole quand la quête est dévoilée
-function MedallionCover({ size, visible }: { size: number; visible: boolean }) {
-  const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(opacity, {
-      toValue: visible ? 1 : 0,
-      duration: 700,
-      useNativeDriver: true,
-    }).start();
-  }, [visible, opacity]);
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        width: size * COVER_ASPECT,
-        height: size,
-        opacity,
-        transform: [
-          { translateY: opacity.interpolate({ inputRange: [0, 1], outputRange: [-size * 0.6, 0] }) },
-          { scale: opacity.interpolate({ inputRange: [0, 1], outputRange: [1.3, 1] }) },
-        ],
-      }}
     >
-      <Image source={COVER_IMAGE} style={{ width: size * COVER_ASPECT, height: size }} contentFit="contain" />
+      <Image
+        source={CLEAR_MAP_IMAGE}
+        style={{
+          position: 'absolute',
+          width: mapWidth,
+          height: mapHeight,
+          left: -(x * mapWidth - size / 2),
+          top: -(y * mapHeight - size / 2),
+        }}
+        contentFit="cover"
+      />
     </Animated.View>
   );
 }
@@ -208,6 +187,19 @@ export default function QuetesScreen() {
         >
           <Image source={MAIN_QUESTS_IMAGE} style={styles.image} contentFit="contain" />
 
+          {/* Trous dans la tempête autour des quêtes dévoilées */}
+          {mapWidth > 0 &&
+            QUESTS.filter(isRevealed).map((quest) => (
+              <StormHole
+                key={`hole-${quest.number}`}
+                mapWidth={mapWidth}
+                mapHeight={mapWidth / MAP_ASPECT}
+                x={quest.x}
+                y={quest.y}
+                size={ringSize * 1.9}
+              />
+            ))}
+
           {/* Anneau doré sur les médaillons des quêtes disponibles */}
           {mapWidth > 0 &&
             QUESTS.map((quest) => (
@@ -250,30 +242,10 @@ export default function QuetesScreen() {
                     transition={300}
                   />
                 )}
-                <MedallionCover size={ringSize * 1.25} visible={!isRevealed(quest)} />
               </Pressable>
             ))}
 
-          {mapWidth > 0 && (
-            <>
-              <View
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: ringSize,
-                  height: ringSize,
-                  left: `${NEXT_QUEST_SPOT.x * 100}%`,
-                  top: `${NEXT_QUEST_SPOT.y * 100}%`,
-                  transform: [{ translateX: -ringSize / 2 }, { translateY: -ringSize / 2 }],
-                }}
-              >
-                <MedallionCover size={ringSize * 1.25} visible />
-              </View>
-              <NextQuestMarker size={ringSize} x={NEXT_QUEST_SPOT.x} y={NEXT_QUEST_SPOT.y} />
-            </>
-          )}
+
         </View>
 
         {/* Registre des quêtes, lisible sur mobile */}
@@ -293,7 +265,9 @@ export default function QuetesScreen() {
               style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
             >
               {!isRevealed(quest) ? (
-                <Image source={COVER_IMAGE} style={styles.rowEmblem} contentFit="contain" />
+                <View style={[styles.badge, styles.badgeStorm]}>
+                  <MaterialCommunityIcons name="weather-lightning-rainy" size={22} color="#cfe6ee" />
+                </View>
               ) : (
                 <View>
                   <Image source={quest.emblem} style={styles.rowEmblem} contentFit="cover" />
@@ -380,11 +354,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 20,
-  },
-  nextRing: {
-    borderColor: '#FFE3A0',
-    backgroundColor: 'rgba(255, 227, 160, 0.18)',
-    shadowRadius: 12,
   },
   ring: {
     position: 'absolute',
@@ -479,6 +448,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#2C221C',
     borderWidth: 2,
     borderColor: colors.brandPrimary,
+  },
+  badgeStorm: {
+    backgroundColor: '#24414d',
+    borderColor: '#6f95a3',
+  },
+  hole: {
+    position: 'absolute',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(8, 28, 38, 0.8)',
   },
   badgeLocked: {
     backgroundColor: '#E2CFA6',
