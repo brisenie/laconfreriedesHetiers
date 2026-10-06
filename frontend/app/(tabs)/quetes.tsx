@@ -93,6 +93,7 @@ function StormHole({
   x,
   y,
   size,
+  shift,
   seed,
 }: {
   mapWidth: number;
@@ -100,6 +101,9 @@ function StormHole({
   x: number;
   y: number;
   size: number;
+  // Décalage vers la gauche : la trouée déborde vers les quêtes déjà
+  // dévoilées, sans jamais toucher le cercle de la quête suivante
+  shift: number;
   seed: number;
 }) {
   const grow = useRef(new Animated.Value(0)).current;
@@ -116,10 +120,10 @@ function StormHole({
   const circles = Array.from({ length: count }, (_, k) => {
     const cy = -size / 2 + k * step;
     // Petit décalage régulier de chaque cercle : bord en volutes
-    const wobble = Math.sin((k + seed) * 2.3) * size * 0.2;
-    const diameter = size * (0.9 + 0.2 * Math.sin((k + seed) * 1.7));
+    const wobble = Math.sin((k + seed) * 2.3) * size * 0.03;
+    const diameter = size * (0.975 + 0.025 * Math.sin((k + seed) * 1.7));
     const start = Math.min(0.85, Math.abs(cy - centerY) / maxDistance);
-    return { cy, cx: x * mapWidth + wobble, diameter, start };
+    return { cy, cx: x * mapWidth - shift + wobble, diameter, start };
   });
 
   return (
@@ -228,7 +232,8 @@ export default function QuetesScreen() {
                 mapHeight={mapWidth / MAP_ASPECT}
                 x={quest.x}
                 y={quest.y}
-                size={ringSize * 1.9}
+                size={ringSize * (quest === QUESTS[0] ? 2.6 : 1.9)}
+                shift={ringSize * (quest === QUESTS[0] ? 0.65 : 0.35)}
                 seed={quest.number * 5}
               />
             ))}
