@@ -29,7 +29,16 @@ const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Fo
 
 // Carte d'origine, sans la tempête : visible à travers la tempête autour
 // des quêtes dévoilées
-const CLEAR_MAP_IMAGE = require('../../quêtes/image de quêtes.png');
+const CLEAR_MAP_IMAGE = require('../../quêtes/carte des quêtes - sans tempete.jpg');
+
+// La patate sur le bateau de la Confrérie, dans un médaillon (310 x 260)
+const BOAT_IMAGE = require('../../assets/images/quetes/bateau-patate.png');
+const BOAT_ASPECT = 310 / 260;
+const BOAT_WIDTH = 0.13; // en fraction de la largeur de la carte
+// Port de départ du bateau, avant la première quête
+const BOAT_START = { x: 0.075, y: 0.62 };
+// Place du bateau à côté d'une quête : en bas à gauche de son cercle
+const boatSpot = (quest: { x: number; y: number }) => ({ x: quest.x - 0.04, y: quest.y + 0.14 });
 
 // Mémorise sur l'appareil les quêtes déjà dévoilées
 const seenKey = (number: number) => `quetes.vue.${number}`;
@@ -171,6 +180,67 @@ function StormHole({
   );
 }
 
+// Bateau de la patate : il navigue jusqu'à la dernière quête dévoilée et
+// se balance doucement sur les vagues
+function Boat({
+  mapWidth,
+  mapHeight,
+  spot,
+}: {
+  mapWidth: number;
+  mapHeight: number;
+  spot: { x: number; y: number };
+}) {
+  const width = mapWidth * BOAT_WIDTH;
+  const height = width / BOAT_ASPECT;
+  const targetX = spot.x * mapWidth - width / 2;
+  const targetY = spot.y * mapHeight - height / 2;
+  const position = useRef(new Animated.ValueXY({ x: targetX, y: targetY })).current;
+  const rock = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(position, {
+      toValue: { x: targetX, y: targetY },
+      duration: 1600,
+      useNativeDriver: true,
+    }).start();
+  }, [position, targetX, targetY]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(rock, { toValue: 1, duration: 1400, useNativeDriver: true }),
+        Animated.timing(rock, { toValue: -1, duration: 1400, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [rock]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      testID="quest-boat"
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width,
+        height,
+        transform: [
+          { translateX: position.x },
+          { translateY: position.y },
+          { rotate: rock.interpolate({ inputRange: [-1, 1], outputRange: ['-4deg', '4deg'] }) },
+        ],
+      }}
+    >
+      <View pointerEvents="none" style={{ width, height }}>
+        <Image source={BOAT_IMAGE} style={{ width, height }} contentFit="contain" />
+      </View>
+    </Animated.View>
+  );
+}
+
 export default function QuetesScreen() {
   const [opened, setOpened] = useState<Quest | null>(null);
   const [mapWidth, setMapWidth] = useState(0);
@@ -193,6 +263,7 @@ export default function QuetesScreen() {
 
   const isRevealed = (quest: Quest) => Boolean(quest.revealed || seen[quest.number]);
   const revealedCount = QUESTS.filter(isRevealed).length;
+  const lastRevealed = [...QUESTS].reverse().find(isRevealed);
 
   // 1er toucher : la quête se dévoile. Ensuite : elle s'ouvre.
   const open = (quest: Quest) => {
@@ -238,6 +309,15 @@ export default function QuetesScreen() {
               />
             ))}
 
+          {/* Bateau de la patate, sous les anneaux pour ne pas gêner le toucher */}
+          {mapWidth > 0 && (
+            <Boat
+              mapWidth={mapWidth}
+              mapHeight={mapWidth / MAP_ASPECT}
+              spot={lastRevealed ? boatSpot(lastRevealed) : BOAT_START}
+            />
+          )}
+
           {/* Anneau doré sur les médaillons des quêtes disponibles */}
           {mapWidth > 0 &&
             QUESTS.map((quest) => (
@@ -282,7 +362,6 @@ export default function QuetesScreen() {
                 )}
               </Pressable>
             ))}
-
 
         </View>
 
