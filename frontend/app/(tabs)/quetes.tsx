@@ -29,8 +29,9 @@ const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Fo
 // Emplacement sur la carte du médaillon de la prochaine quête
 const NEXT_QUEST_SPOT = { x: 0.433, y: 0.533 };
 
-// Médaillon de tempête qui cache une quête pas encore dévoilée
-const COVER_IMAGE = require('../../assets/images/quetes/couvert.png');
+// Petit nuage qui cache une quête pas encore dévoilée (240 x 200)
+const COVER_IMAGE = require('../../assets/images/quetes/nuage.png');
+const COVER_ASPECT = 240 / 200;
 
 // Mémorise sur l'appareil les quêtes déjà dévoilées
 const seenKey = (number: number) => `quetes.vue.${number}`;
@@ -124,8 +125,7 @@ function NextQuestMarker({ size, x, y }: { size: number; x: number; y: number })
   );
 }
 
-// Couvercle de tempête posé sur un médaillon ; il s'efface quand la quête
-// est dévoilée
+// Nuage posé sur un médaillon ; il s'envole quand la quête est dévoilée
 function MedallionCover({ size, visible }: { size: number; visible: boolean }) {
   const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
@@ -142,15 +142,16 @@ function MedallionCover({ size, visible }: { size: number; visible: boolean }) {
       pointerEvents="none"
       style={{
         position: 'absolute',
-        width: size,
+        width: size * COVER_ASPECT,
         height: size,
         opacity,
         transform: [
-          { scale: opacity.interpolate({ inputRange: [0, 1], outputRange: [1.4, 1] }) },
+          { translateY: opacity.interpolate({ inputRange: [0, 1], outputRange: [-size * 0.6, 0] }) },
+          { scale: opacity.interpolate({ inputRange: [0, 1], outputRange: [1.3, 1] }) },
         ],
       }}
     >
-      <Image source={COVER_IMAGE} style={{ width: size, height: size }} contentFit="contain" />
+      <Image source={COVER_IMAGE} style={{ width: size * COVER_ASPECT, height: size }} contentFit="contain" />
     </Animated.View>
   );
 }
@@ -249,7 +250,7 @@ export default function QuetesScreen() {
                     transition={300}
                   />
                 )}
-                <MedallionCover size={ringSize * 1.12} visible={!isRevealed(quest)} />
+                <MedallionCover size={ringSize * 1.25} visible={!isRevealed(quest)} />
               </Pressable>
             ))}
 
@@ -268,7 +269,7 @@ export default function QuetesScreen() {
                   transform: [{ translateX: -ringSize / 2 }, { translateY: -ringSize / 2 }],
                 }}
               >
-                <MedallionCover size={ringSize * 1.12} visible />
+                <MedallionCover size={ringSize * 1.25} visible />
               </View>
               <NextQuestMarker size={ringSize} x={NEXT_QUEST_SPOT.x} y={NEXT_QUEST_SPOT.y} />
             </>
