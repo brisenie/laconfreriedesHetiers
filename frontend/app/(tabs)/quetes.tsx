@@ -29,7 +29,10 @@ const FORGERON_EXPLAINED_IMAGE = require('../../quêtes/toutes les quêtes/La_Fo
 // Emplacement sur la carte du médaillon de la prochaine quête
 const NEXT_QUEST_SPOT = { x: 0.433, y: 0.533 };
 
-// Mémorise sur l'appareil les quêtes déjà ouvertes
+// Médaillon de tempête qui cache une quête pas encore dévoilée
+const COVER_IMAGE = require('../../assets/images/quetes/couvert.png');
+
+// Mémorise sur l'appareil les quêtes déjà dévoilées
 const seenKey = (number: number) => `quetes.vue.${number}`;
 
 type Quest = {
@@ -41,6 +44,8 @@ type Quest = {
   pages?: BookPage[];
   // Illustration de la quête, affichée dans le médaillon une fois ouverte
   emblem: ImageSourcePropType;
+  // true : quête dévoilée pour tout le monde, sans avoir à toucher son médaillon
+  revealed?: boolean;
   // Centre du médaillon sur la carte (fractions de la largeur / hauteur)
   x: number;
   y: number;
@@ -119,6 +124,37 @@ function NextQuestMarker({ size, x, y }: { size: number; x: number; y: number })
   );
 }
 
+// Couvercle de tempête posé sur un médaillon ; il s'efface quand la quête
+// est dévoilée
+function MedallionCover({ size, visible }: { size: number; visible: boolean }) {
+  const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: visible ? 1 : 0,
+      duration: 700,
+      useNativeDriver: true,
+    }).start();
+  }, [visible, opacity]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        width: size,
+        height: size,
+        opacity,
+        transform: [
+          { scale: opacity.interpolate({ inputRange: [0, 1], outputRange: [1.4, 1] }) },
+        ],
+      }}
+    >
+      <Image source={COVER_IMAGE} style={{ width: size, height: size }} contentFit="contain" />
+    </Animated.View>
+  );
+}
+
 export default function QuetesScreen() {
   const [opened, setOpened] = useState<Quest | null>(null);
   const [mapWidth, setMapWidth] = useState(0);
@@ -139,13 +175,19 @@ export default function QuetesScreen() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
 
+  const isRevealed = (quest: Quest) => Boolean(quest.revealed || seen[quest.number]);
+  const revealedCount = QUESTS.filter(isRevealed).length;
+
+  // 1er toucher : la quête se dévoile. Ensuite : elle s'ouvre.
   const open = (quest: Quest) => {
-    Haptics.selectionAsync().catch(() => {});
-    setOpened(quest);
-    if (!seen[quest.number]) {
+    if (!isRevealed(quest)) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       setSeen((current) => ({ ...current, [quest.number]: true }));
       storage.setItem(seenKey(quest.number), true);
+      return;
     }
+    Haptics.selectionAsync().catch(() => {});
+    setOpened(quest);
   };
 
   const ringSize = mapWidth * MEDALLION_SIZE;
@@ -170,7 +212,11 @@ export default function QuetesScreen() {
             QUESTS.map((quest) => (
               <Pressable
                 key={quest.number}
-                accessibilityLabel={`Ouvrir la quête ${quest.number} : ${quest.title}`}
+                accessibilityLabel={
+                  isRevealed(quest)
+                    ? `Ouvrir la quête ${quest.number} : ${quest.title}`
+                    : `Dévoiler la quête ${quest.number}`
+                }
                 onPress={() => open(quest)}
                 testID={`quest-marker-${quest.number}`}
                 style={[
@@ -188,7 +234,7 @@ export default function QuetesScreen() {
                   },
                 ]}
               >
-                {seen[quest.number] && (
+                {isRevealed(quest) && (
                   <Image
                     source={quest.emblem}
                     style={[
@@ -203,11 +249,29 @@ export default function QuetesScreen() {
                     transition={300}
                   />
                 )}
+                <MedallionCover size={ringSize * 1.12} visible={!isRevealed(quest)} />
               </Pressable>
             ))}
 
           {mapWidth > 0 && (
-            <NextQuestMarker size={ringSize} x={NEXT_QUEST_SPOT.x} y={NEXT_QUEST_SPOT.y} />
+            <>
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: ringSize,
+                  height: ringSize,
+                  left: `${NEXT_QUEST_SPOT.x * 100}%`,
+                  top: `${NEXT_QUEST_SPOT.y * 100}%`,
+                  transform: [{ translateX: -ringSize / 2 }, { translateY: -ringSize / 2 }],
+                }}
+              >
+                <MedallionCover size={ringSize * 1.12} visible />
+              </View>
+              <NextQuestMarker size={ringSize} x={NEXT_QUEST_SPOT.x} y={NEXT_QUEST_SPOT.y} />
+            </>
           )}
         </View>
 
@@ -215,7 +279,9 @@ export default function QuetesScreen() {
         <View style={[styles.register, isWide && styles.registerWide]}>
           <Text style={styles.registerTitle}>REGISTRE DES QUÊTES</Text>
           <Text style={styles.registerSub}>
-            {QUESTS.length} quêtes accomplies
+            {revealedCount > 1
+              ? `${revealedCount} quêtes dévoilées`
+              : `${revealedCount} quête dévoilée`}
           </Text>
 
           {QUESTS.map((quest) => (
@@ -225,21 +291,23 @@ export default function QuetesScreen() {
               testID={`quest-row-${quest.number}`}
               style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
             >
-              {seen[quest.number] ? (
+              {!isRevealed(quest) ? (
+                <Image source={COVER_IMAGE} style={styles.rowEmblem} contentFit="contain" />
+              ) : (
                 <View>
                   <Image source={quest.emblem} style={styles.rowEmblem} contentFit="cover" />
                   <View style={styles.rowEmblemNumber}>
                     <Text style={styles.rowEmblemNumberText}>{quest.number}</Text>
                   </View>
                 </View>
-              ) : (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{quest.number}</Text>
-                </View>
               )}
               <View style={styles.rowBody}>
-                <Text style={styles.rowTitle}>{quest.title}</Text>
-                <Text style={styles.rowStatus}>{quest.status}</Text>
+                <Text style={styles.rowTitle}>
+                  {isRevealed(quest) ? quest.title : `Quête ${quest.number} · ???`}
+                </Text>
+                <Text style={styles.rowStatus}>
+                  {isRevealed(quest) ? quest.status : 'Touchez pour la dévoiler'}
+                </Text>
               </View>
               <MaterialCommunityIcons name="chevron-right" size={22} color={colors.brandPrimary} />
             </Pressable>
