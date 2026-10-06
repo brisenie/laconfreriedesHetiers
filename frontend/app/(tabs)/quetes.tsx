@@ -84,7 +84,8 @@ const MAP_ASPECT = 1536 / 1024;
 const MEDALLION_SIZE = 0.074; // diamètre de l'anneau, en fraction de la largeur de la carte
 const EMBLEM_SIZE = 0.05; // diamètre de l'illustration posée sur le médaillon
 
-// Trou dans la tempête autour d'une quête dévoilée : on y revoit la carte
+// Trouée dans la tempête au-dessus d'une quête dévoilée : elle s'ouvre en
+// cercle sur la quête puis s'élargit jusqu'en haut et en bas de la carte
 function StormHole({
   mapWidth,
   mapHeight,
@@ -98,11 +99,17 @@ function StormHole({
   y: number;
   size: number;
 }) {
-  const opacity = useRef(new Animated.Value(0)).current;
+  const grow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true }).start();
-  }, [opacity]);
+    Animated.sequence([
+      Animated.timing(grow, { toValue: 0.25, duration: 350, useNativeDriver: false }),
+      Animated.timing(grow, { toValue: 1, duration: 900, useNativeDriver: false }),
+    ]).start();
+  }, [grow]);
+
+  const left = x * mapWidth - size / 2;
+  const startTop = y * mapHeight - size / 2;
 
   return (
     <Animated.View
@@ -111,26 +118,30 @@ function StormHole({
         styles.hole,
         {
           width: size,
-          height: size,
           borderRadius: size / 2,
-          left: x * mapWidth - size / 2,
-          top: y * mapHeight - size / 2,
-          opacity,
-          transform: [{ scale: opacity.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }],
+          left,
+          opacity: grow.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 1] }),
+          top: grow.interpolate({ inputRange: [0, 0.25, 1], outputRange: [startTop, startTop, -size / 2] }),
+          height: grow.interpolate({
+            inputRange: [0, 0.25, 1],
+            outputRange: [size * 0.3, size, mapHeight + size],
+          }),
         },
       ]}
     >
-      <Image
-        source={CLEAR_MAP_IMAGE}
+      <Animated.View
         style={{
           position: 'absolute',
-          width: mapWidth,
-          height: mapHeight,
-          left: -(x * mapWidth - size / 2),
-          top: -(y * mapHeight - size / 2),
+          left: -left,
+          top: grow.interpolate({ inputRange: [0, 0.25, 1], outputRange: [-startTop, -startTop, size / 2] }),
         }}
-        contentFit="cover"
-      />
+      >
+        <Image
+          source={CLEAR_MAP_IMAGE}
+          style={{ width: mapWidth, height: mapHeight }}
+          contentFit="cover"
+        />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -456,8 +467,6 @@ const styles = StyleSheet.create({
   hole: {
     position: 'absolute',
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(8, 28, 38, 0.8)',
   },
   badgeLocked: {
     backgroundColor: '#E2CFA6',
