@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/src/theme';
+import { useBackClose } from '@/src/hooks/use-web-back';
 
 type Props = {
   source: ImageSourcePropType | null;
@@ -22,6 +23,9 @@ type Props = {
 // Affiche une image en plein écran. Un toucher n'importe où la referme.
 export default function ImageViewer({ source, title, onClose }: Props) {
   const insets = useSafeAreaInsets();
+
+  // Le bouton « retour » du navigateur ferme la fenêtre au lieu de quitter le site
+  useBackClose(source !== null, onClose);
 
   return (
     <Modal

@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, spacing } from '@/src/theme';
 import ImageViewer, { ZoomHint } from '@/src/components/ImageViewer';
+import { useBackClose } from '@/src/hooks/use-web-back';
 
 export type GallerySection = {
   title: string;
@@ -38,6 +39,9 @@ export default function GalleryViewer({ visible, title, sections, onClose }: Pro
   const [zoomed, setZoomed] = useState<GallerySection | null>(null);
 
   const imageWidth = Math.min(width - spacing.md * 2, 1100);
+
+  // Le bouton « retour » du navigateur ferme l'arsenal au lieu de quitter le site
+  useBackClose(visible, onClose);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>

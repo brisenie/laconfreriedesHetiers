@@ -13,6 +13,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, spacing } from '@/src/theme';
+import { useBackClose } from '@/src/hooks/use-web-back';
 
 export type BookPage = {
   source: ImageSourcePropType;
@@ -50,6 +51,9 @@ export default function BookViewer({ pages, title, onClose }: Props) {
   const pageHeight = totalAspect > 0 ? Math.min(availH, availW / totalAspect) : 0;
 
   const focusedPage = pages && focused !== null ? pages[focused] : null;
+
+  // Le bouton « retour » du navigateur ferme la page agrandie, puis le livre
+  useBackClose(pages !== null, () => (focused !== null ? setFocused(null) : close()));
 
   return (
     <Modal visible={pages !== null} transparent animationType="fade" onRequestClose={close}>
