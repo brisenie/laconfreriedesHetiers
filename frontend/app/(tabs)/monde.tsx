@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-import { colors } from '@/src/theme';
+import { colors, fonts } from '@/src/theme';
 import GalleryViewer, { GallerySection } from '@/src/components/GalleryViewer';
 
 const ARSENAL_SECTIONS: GallerySection[] = [
@@ -19,6 +19,34 @@ const ARSENAL_SECTIONS: GallerySection[] = [
     aspect: 1942 / 809,
   },
 ];
+
+// Le Fraser, navire de la Confrérie, et ses trois étages
+const FRASER_SECTIONS: GallerySection[] = [
+  { title: 'Le navire', source: require('../../Monde/fraser/le-fraser.jpg'), aspect: 1448 / 1086 },
+  {
+    title: 'Les trois étages',
+    source: require('../../Monde/fraser/les-trois-etages.jpg'),
+    aspect: 1223 / 1286,
+  },
+  {
+    title: 'Niveau 3 — Pont supérieur',
+    source: require('../../Monde/fraser/niveau-3-pont-superieur.jpg'),
+    aspect: 1122 / 1402,
+  },
+  {
+    title: 'Niveau 2 — Pont principal',
+    source: require('../../Monde/fraser/niveau-2-pont-principal.jpg'),
+    aspect: 1122 / 1402,
+  },
+  {
+    title: 'Niveau 1 — Cale inférieure',
+    source: require('../../Monde/fraser/niveau-1-cale-inferieure.jpg'),
+    aspect: 1122 / 1402,
+  },
+];
+
+// Navire dessiné dans le bandeau « Univers » : il ouvre Le Fraser
+const SHIP_SPOT = { left: 0.7, right: 0.97, top: 0.08, bottom: 0.23 };
 
 const UNIVERS =
   'https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/46qnx118_file_000000004cd0722fae6924f665c15167.png';
@@ -65,6 +93,7 @@ const CARDS: Card[] = [
 export default function MondeScreen() {
   const router = useRouter();
   const [showArsenal, setShowArsenal] = useState(false);
+  const [showFraser, setShowFraser] = useState(false);
   const [box, setBox] = useState({ width: 0, height: 0 });
 
   // L'image entière tient dans l'écran, sans défilement
@@ -149,8 +178,40 @@ export default function MondeScreen() {
               ) : null}
             </Pressable>
           ))}
+
+          {/* Le navire du bandeau ouvre Le Fraser */}
+          <Pressable
+            testID="univers-fraser"
+            accessibilityLabel="Ouvrir Le Fraser, le navire de la Confrérie"
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setShowFraser(true);
+            }}
+            style={{
+              position: 'absolute',
+              top: imgHeight * SHIP_SPOT.top,
+              left: imgWidth * SHIP_SPOT.left,
+              width: imgWidth * (SHIP_SPOT.right - SHIP_SPOT.left),
+              height: imgHeight * (SHIP_SPOT.bottom - SHIP_SPOT.top),
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <View style={styles.fraserBadge}>
+              <Text style={[styles.fraserBadgeText, { fontSize: Math.max(9, imgWidth * 0.028) }]}>
+                ⚓ Le Fraser
+              </Text>
+            </View>
+          </Pressable>
         </View>
       )}
+
+      <GalleryViewer
+        visible={showFraser}
+        title="LE FRASER"
+        sections={FRASER_SECTIONS}
+        onClose={() => setShowFraser(false)}
+      />
 
       <GalleryViewer
         visible={showArsenal}
@@ -167,5 +228,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
     overflow: 'hidden',
+  },
+  fraserBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: 'rgba(22, 19, 17, 0.75)',
+    borderWidth: 1,
+    borderColor: colors.brandPrimary,
+  },
+  fraserBadgeText: {
+    fontFamily: fonts.display,
+    fontWeight: '700',
+    color: colors.brandPrimary,
+    letterSpacing: 0.5,
   },
 });
