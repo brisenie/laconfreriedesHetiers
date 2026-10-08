@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-import { colors, fonts } from '@/src/theme';
+import { colors } from '@/src/theme';
 import GalleryViewer, { GallerySection } from '@/src/components/GalleryViewer';
 
 const ARSENAL_SECTIONS: GallerySection[] = [
@@ -45,8 +45,6 @@ const FRASER_SECTIONS: GallerySection[] = [
   },
 ];
 
-// Navire dessiné dans le bandeau « Univers » : il ouvre Le Fraser
-const SHIP_SPOT = { left: 0.7, right: 0.97, top: 0.08, bottom: 0.23 };
 
 const UNIVERS =
   'https://customer-assets.emergentagent.com/job_mobile-app-builder-1889/artifacts/46qnx118_file_000000004cd0722fae6924f665c15167.png';
@@ -107,6 +105,12 @@ export default function MondeScreen() {
 
     if (id === 'histoire') {
       router.push('/histoire');
+      return;
+    }
+
+    // La carte « Monde » ouvre Le Fraser, le navire de la Confrérie
+    if (id === 'monde') {
+      setShowFraser(true);
       return;
     }
 
@@ -178,31 +182,6 @@ export default function MondeScreen() {
               ) : null}
             </Pressable>
           ))}
-
-          {/* Le navire du bandeau ouvre Le Fraser */}
-          <Pressable
-            testID="univers-fraser"
-            accessibilityLabel="Ouvrir Le Fraser, le navire de la Confrérie"
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              setShowFraser(true);
-            }}
-            style={{
-              position: 'absolute',
-              top: imgHeight * SHIP_SPOT.top,
-              left: imgWidth * SHIP_SPOT.left,
-              width: imgWidth * (SHIP_SPOT.right - SHIP_SPOT.left),
-              height: imgHeight * (SHIP_SPOT.bottom - SHIP_SPOT.top),
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-            }}
-          >
-            <View style={styles.fraserBadge}>
-              <Text style={[styles.fraserBadgeText, { fontSize: Math.max(9, imgWidth * 0.028) }]}>
-                ⚓ Le Fraser
-              </Text>
-            </View>
-          </Pressable>
         </View>
       )}
 
@@ -228,19 +207,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
     overflow: 'hidden',
-  },
-  fraserBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: 'rgba(22, 19, 17, 0.75)',
-    borderWidth: 1,
-    borderColor: colors.brandPrimary,
-  },
-  fraserBadgeText: {
-    fontFamily: fonts.display,
-    fontWeight: '700',
-    color: colors.brandPrimary,
-    letterSpacing: 0.5,
   },
 });
