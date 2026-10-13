@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   ImageSourcePropType,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,7 @@ import { colors, fonts, radius, spacing } from '@/src/theme';
 import ScreenHeader from '@/src/components/ScreenHeader';
 import ImageViewer from '@/src/components/ImageViewer';
 import BookViewer, { BookPage } from '@/src/components/BookViewer';
+import PasswordGate from '@/src/components/PasswordGate';
 import { storage } from '@/src/utils/storage';
 
 // Carte des quêtes : le chemin se perd dans les « Aventures inconnues »
@@ -52,6 +54,8 @@ type Quest = {
   pages?: BookPage[];
   // Illustration de la quête, affichée dans le médaillon une fois ouverte
   emblem: ImageSourcePropType;
+  // Document réservé (Google Docs…) : ouvert après le mot de passe, au lieu d'une image
+  link?: { url: string; passwordHash: string };
   // true : quête dévoilée pour tout le monde, sans avoir à toucher son médaillon
   revealed?: boolean;
   // Centre du médaillon sur la carte (fractions de la largeur / hauteur)
@@ -86,6 +90,22 @@ const QUESTS: Quest[] = [
     emblem: require('../../assets/images/quetes/forge.png'),
     x: 0.353,
     y: 0.469,
+  },
+  {
+    number: 4,
+    title: 'Le Labyrinthe du Minotaure',
+    status: 'Réservée au Maître du jeu',
+    image: require('../../assets/images/quetes/labyrinthe.png'),
+    emblem: require('../../assets/images/quetes/labyrinthe.png'),
+    // Guide de la quête sur Google Drive (fichier privé : seul son propriétaire
+    // peut l'ouvrir, même avec le lien). Pour changer le mot de passe, demander
+    // sa nouvelle empreinte : passwordHash('nouveau mot de passe').
+    link: {
+      url: 'https://docs.google.com/document/d/1HmwnbRu9ztjZNZS6qaloVFBzvXswePL6/edit?rtpof=true',
+      passwordHash: '1pyky415x0v',
+    },
+    x: 0.433,
+    y: 0.533,
   },
 ];
 
@@ -261,6 +281,8 @@ export default function QuetesScreen() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
 
+  const [locked, setLocked] = useState<Quest | null>(null);
+
   const isRevealed = (quest: Quest) => Boolean(quest.revealed || seen[quest.number]);
   const revealedCount = QUESTS.filter(isRevealed).length;
   const lastRevealed = [...QUESTS].reverse().find(isRevealed);
@@ -274,6 +296,10 @@ export default function QuetesScreen() {
       return;
     }
     Haptics.selectionAsync().catch(() => {});
+    if (quest.link) {
+      setLocked(quest);
+      return;
+    }
     setOpened(quest);
   };
 
@@ -423,6 +449,18 @@ export default function QuetesScreen() {
         source={opened && !opened.pages ? opened.image : null}
         title={opened ? `Quête ${opened.number} · ${opened.title}` : undefined}
         onClose={() => setOpened(null)}
+      />
+
+      <PasswordGate
+        visible={locked !== null}
+        title={locked ? `Quête ${locked.number} · ${locked.title}` : ''}
+        hash={locked?.link?.passwordHash ?? ''}
+        onClose={() => setLocked(null)}
+        onSuccess={() => {
+          const url = locked?.link?.url;
+          setLocked(null);
+          if (url) Linking.openURL(url).catch(() => {});
+        }}
       />
 
       <BookViewer
