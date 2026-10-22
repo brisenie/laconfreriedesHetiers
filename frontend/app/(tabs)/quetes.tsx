@@ -76,7 +76,7 @@ const QUESTS: Quest[] = [
   {
     number: 2,
     title: 'Le message des anciens et la lettre du capitaine',
-    status: 'Découverte',
+    status: 'Complétée',
     image: ANCIENT_MESSAGE_IMAGE,
     emblem: require('../../assets/images/quetes/message.png'),
     x: 0.264,
@@ -85,7 +85,7 @@ const QUESTS: Quest[] = [
   {
     number: 3,
     title: 'La forge des Anciens',
-    status: 'Découverte',
+    status: 'Complétée',
     image: FORGERON_EXPLAINED_IMAGE,
     emblem: require('../../assets/images/quetes/forge.png'),
     x: 0.353,
