@@ -3,6 +3,7 @@ import {
   Animated,
   ImageSourcePropType,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +21,7 @@ import ScreenHeader from '@/src/components/ScreenHeader';
 import ImageViewer from '@/src/components/ImageViewer';
 import BookViewer, { BookPage } from '@/src/components/BookViewer';
 import PasswordGate from '@/src/components/PasswordGate';
+import QuestSongPlayer from '@/src/components/QuestSongPlayer';
 import { storage } from '@/src/utils/storage';
 
 // Carte des quêtes : le chemin se perd dans les « Aventures inconnues »
@@ -54,7 +56,7 @@ type Quest = {
   pages?: BookPage[];
   // Illustration de la quête, affichée dans le médaillon une fois ouverte
   emblem: ImageSourcePropType;
-  // Document réservé (Google Docs…) : ouvert après le mot de passe, au lieu d'une image
+  // Document réservé, accessible par une petite icône après le mot de passe
   link?: { url: string; passwordHash: string };
   // true : quête dévoilée pour tout le monde, sans avoir à toucher son médaillon
   revealed?: boolean;
@@ -94,16 +96,19 @@ const QUESTS: Quest[] = [
   {
     number: 4,
     title: 'Le Labyrinthe du Minotaure',
-    status: 'Réservée au Maître du jeu',
+    status: 'Disponible',
     image: require('../../assets/images/quetes/labyrinthe.png'),
+    pages: [
+      { source: require('../../assets/images/quetes/mary-genois-journal-1.png'), aspect: 2 / 3 },
+      { source: require('../../assets/images/quetes/mary-genois-journal-2.png'), aspect: 2 / 3 },
+    ],
     emblem: require('../../assets/images/quetes/labyrinthe.png'),
-    // Guide de la quête sur Google Drive (fichier privé : seul son propriétaire
-    // peut l'ouvrir, même avec le lien). Pour changer le mot de passe, demander
-    // sa nouvelle empreinte : passwordHash('nouveau mot de passe').
+    // Guide de la quête sur Google Drive : ses autorisations de partage s'appliquent.
     link: {
       url: 'https://docs.google.com/document/d/1HmwnbRu9ztjZNZS6qaloVFBzvXswePL6/edit?rtpof=true',
-      passwordHash: '1pyky415x0v',
+      passwordHash: '2ewdiauhtuh',
     },
+    revealed: true,
     x: 0.433,
     y: 0.533,
   },
@@ -280,8 +285,8 @@ export default function QuetesScreen() {
   // Sur grand écran, le registre se place à droite de la carte
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
-
   const [locked, setLocked] = useState<Quest | null>(null);
+  const [songOpen, setSongOpen] = useState(false);
 
   const isRevealed = (quest: Quest) => Boolean(quest.revealed || seen[quest.number]);
   const revealedCount = QUESTS.filter(isRevealed).length;
@@ -296,10 +301,6 @@ export default function QuetesScreen() {
       return;
     }
     Haptics.selectionAsync().catch(() => {});
-    if (quest.link) {
-      setLocked(quest);
-      return;
-    }
     setOpened(quest);
   };
 
@@ -427,6 +428,40 @@ export default function QuetesScreen() {
                   {isRevealed(quest) ? quest.status : 'Touchez pour la dévoiler'}
                 </Text>
               </View>
+              {quest.number === 1 && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Écouter la chanson de la quête 1"
+                  testID="quest-song-1"
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    if (Platform.OS === 'web') setSongOpen(true);
+                    else Linking.openURL('https://www.youtube.com/watch?v=culCToPiSwg');
+                  }}
+                  style={({ pressed }) => [styles.documentButton, pressed && { opacity: 0.7 }]}
+                >
+                  <MaterialCommunityIcons name="volume-high" size={26} color="#3B2718" />
+                </Pressable>
+              )}
+              {isRevealed(quest) && quest.link && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ouvrir le document du Maître du jeu de la quête ${quest.number}`}
+                  testID={`quest-document-${quest.number}`}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    setLocked(quest);
+                  }}
+                  style={({ pressed }) => [styles.documentButton, pressed && { opacity: 0.7 }]}
+                >
+                  <View style={styles.documentIcon}>
+                    <MaterialCommunityIcons name="file-outline" size={32} color="#3B2718" />
+                    <View style={styles.documentMjBadge}>
+                      <Text style={styles.documentMjText}>MJ</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              )}
               <MaterialCommunityIcons name="chevron-right" size={22} color={colors.brandPrimary} />
             </Pressable>
           ))}
@@ -451,9 +486,17 @@ export default function QuetesScreen() {
         onClose={() => setOpened(null)}
       />
 
+      <BookViewer
+        pages={opened?.pages ?? null}
+        title={opened ? `Quête ${opened.number} · ${opened.title}` : undefined}
+        onClose={() => setOpened(null)}
+      />
+
+      <QuestSongPlayer visible={songOpen} onClose={() => setSongOpen(false)} />
+
       <PasswordGate
         visible={locked !== null}
-        title={locked ? `Quête ${locked.number} · ${locked.title}` : ''}
+        title={locked ? `Document · Quête ${locked.number}` : ''}
         hash={locked?.link?.passwordHash ?? ''}
         onClose={() => setLocked(null)}
         onSuccess={() => {
@@ -461,12 +504,6 @@ export default function QuetesScreen() {
           setLocked(null);
           if (url) Linking.openURL(url).catch(() => {});
         }}
-      />
-
-      <BookViewer
-        pages={opened?.pages ?? null}
-        title={opened ? `Quête ${opened.number} · ${opened.title}` : undefined}
-        onClose={() => setOpened(null)}
       />
     </SafeAreaView>
   );
@@ -593,6 +630,41 @@ const styles = StyleSheet.create({
   rowLocked: {
     backgroundColor: 'transparent',
     borderStyle: 'dashed',
+  },
+  documentButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#C9A86A',
+    backgroundColor: '#EAD9B5',
+  },
+  documentIcon: {
+    width: 32,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  documentMjBadge: {
+    position: 'absolute',
+    bottom: 2,
+    alignSelf: 'center',
+    minWidth: 26,
+    height: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#C9A86A',
+    backgroundColor: '#3B2718',
+  },
+  documentMjText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: '#F6EBD2',
   },
   badge: {
     width: 44,
